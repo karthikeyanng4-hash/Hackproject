@@ -54,7 +54,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-20 flex items-center justify-center px-4 relative overflow-hidden bg-slate-950 dark:bg-slate-950 light:bg-slate-50 transition-colors">
+    <div className="min-h-screen pt-20 flex items-center justify-center px-4 relative overflow-hidden bg-app-bg transition-colors">
       <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyan-500/10 blur-[100px] -z-10"></div>
       <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 blur-[100px] -z-10"></div>
 
@@ -63,13 +63,13 @@ const Login: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/10 dark:border-white/10 light:border-slate-200 rounded-3xl p-8 shadow-2xl transition-colors">
+        <div className="bg-app-surface border border-app-border rounded-3xl p-8 shadow-2xl transition-all">
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-500 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
               <Globe className="text-white w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-bold text-white dark:text-white light:text-slate-900 mb-2">{t.auth.login_title}</h1>
-            <p className="text-slate-400 text-sm">{t.auth.login_subtitle}</p>
+            <h1 className="text-2xl font-bold text-app-text mb-2">{t.auth.login_title}</h1>
+            <p className="text-app-text-muted text-sm">{t.auth.login_subtitle}</p>
           </div>
 
           {error && (
@@ -81,38 +81,38 @@ const Login: React.FC = () => {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2 ml-1">{t.auth.email}</label>
+              <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-2 ml-1">{t.auth.email}</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-app-text-muted" />
                 <input
                   required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all"
+                  className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-12 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2 ml-1">{t.auth.password}</label>
+              <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-2 ml-1">{t.auth.password}</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-app-text-muted" />
                 <input
                   required
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all"
+                  className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-12 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all"
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-between text-xs">
-              <label className="flex items-center space-x-2 text-slate-400 cursor-pointer">
-                <input type="checkbox" className="rounded border-white/10 bg-slate-800 text-cyan-500 focus:ring-0" />
+              <label className="flex items-center space-x-2 text-app-text-muted cursor-pointer">
+                <input type="checkbox" className="rounded border-app-border bg-app-bg text-cyan-500 focus:ring-0" />
                 <span>Remember me</span>
               </label>
               <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">{t.auth.forgot_password}</a>
@@ -135,7 +135,7 @@ const Login: React.FC = () => {
           </form>
 
           <div className="mt-8 text-center text-sm">
-            <span className="text-slate-500 text-xs">{t.auth.no_account} </span>
+            <span className="text-app-text-muted text-xs">{t.auth.no_account} </span>
             <Link to="/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors font-semibold">{t.auth.signup_button}</Link>
           </div>
         </div>

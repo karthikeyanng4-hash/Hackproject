@@ -5,19 +5,32 @@
   
   /* Theme-aware background and foreground */
   --color-app-bg: var(--app-bg);
+  --color-app-surface: var(--app-surface);
+  --color-app-surface-hover: var(--app-surface-hover);
   --color-app-text: var(--app-text);
+  --color-app-text-muted: var(--app-text-muted);
+  --color-app-border: var(--app-border);
+  --color-app-border-hover: var(--app-border-hover);
 }
-
-@custom-variant light (&:where(.light, .light *));
 
 :root {
-  --app-bg: #020617; /* slate-950 */
-  --app-text: #e2e8f0; /* slate-200 */
+  --app-bg: #f8fafc; /* slate-50 */
+  --app-surface: #ffffff;
+  --app-surface-hover: #f1f5f9; /* slate-100 */
+  --app-text: #0f172a; /* slate-900 */
+  --app-text-muted: #64748b; /* slate-500 */
+  --app-border: rgba(0, 0, 0, 0.05);
+  --app-border-hover: rgba(0, 0, 0, 0.1);
 }
 
-:root.light {
-  --app-bg: #f8fafc; /* slate-50 */
-  --app-text: #1e293b; /* slate-800 */
+.dark {
+  --app-bg: #020617; /* slate-950 */
+  --app-surface: #0f172a; /* slate-900 */
+  --app-surface-hover: #1e293b; /* slate-800 */
+  --app-text: #f8fafc; /* slate-50 */
+  --app-text-muted: #94a3b8; /* slate-400 */
+  --app-border: rgba(255, 255, 255, 0.05);
+  --app-border-hover: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
@@ -38,17 +51,17 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-slate-900 light:bg-slate-200;
+  .custom-scrollbar  ::-webkit-scrollbar-track {
+    @apply bg-app-bg;
   }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-800 rounded-full hover:bg-slate-700 light:bg-slate-300 light:hover:bg-slate-400 transition-colors;
+  ::-webkit-scrollbar-thumb {
+    @apply bg-app-bg rounded-full hover:bg-app-surface transition-colors;
   }
 }
 
 /* Glassmorphism utility */
 .glass {
-  @apply bg-white/5 backdrop-blur-md border border-white/10 light:bg-black/5 light:border-black/10;
+  @apply bg-app-surface/5 backdrop-blur-md border border-app-border;
 }
 
 /* Animations */

@@ -47,11 +47,12 @@ const Navbar: React.FC = () => {
     { name: t.schemes, path: '/schemes', icon: Search },
     { name: t.eligibility, path: '/eligibility', icon: FileCheck },
     { name: t.dashboard, path: '/dashboard', icon: LayoutDashboard },
+    { name: t.personal_details, path: '/personal-details', icon: User },
   ];
 
   return (
     <nav 
-      className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 light:bg-white/80 backdrop-blur-md border-b border-white/10 light:border-black/10"
+      className="fixed top-0 left-0 right-0 z-50 bg-app-surface/80 backdrop-blur-md border-b border-app-border"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -60,7 +61,7 @@ const Navbar: React.FC = () => {
               <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.5)]">
                 <Globe className="text-white w-5 h-5" />
               </div>
-              <span className="text-xl font-bold text-white light:text-slate-900 tracking-tight">GovAssist <span className="text-cyan-400">AI</span></span>
+              <span className="text-xl font-bold text-app-text tracking-tight">GovAssist <span className="text-cyan-400">AI</span></span>
             </Link>
           </div>
 
@@ -71,7 +72,7 @@ const Navbar: React.FC = () => {
                   key={item.name}
                   to={item.path}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.path ? 'text-cyan-400 bg-white/5 light:bg-black/5' : 'text-slate-300 light:text-slate-600 hover:text-white light:hover:text-slate-900 hover:bg-white/5 light:hover:bg-black/5'
+                    location.pathname === item.path ? 'text-cyan-400 bg-app-bg/50' : 'text-app-text-muted hover:text-app-text hover:bg-app-surface-hover'
                   }`}
                 >
                   {item.name}
@@ -83,7 +84,7 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full bg-white/5 light:bg-black/5 text-slate-400 light:text-slate-500 hover:text-white light:hover:text-slate-900 transition-all border border-white/10 light:border-black/10"
+              className="p-2 rounded-full bg-app-surface text-app-text-muted hover:text-app-text transition-all border border-app-border hover:border-app-border-hover"
               aria-label="Toggle Theme"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -95,7 +96,7 @@ const Navbar: React.FC = () => {
                   key={l}
                   onClick={() => changeLang(l)}
                   className={`px-2 py-1 text-xs rounded border transition-all ${
-                    lang === l ? 'bg-cyan-500 border-cyan-500 text-white' : 'border-white/20 light:border-black/20 text-slate-400 light:text-slate-500 hover:border-white/40 light:hover:border-black/40'
+                    lang === l ? 'bg-cyan-500 border-cyan-500 text-white' : 'border-app-border text-app-text-muted hover:border-app-border-hover'
                   }`}
                 >
                   {l.toUpperCase()}
@@ -105,9 +106,9 @@ const Navbar: React.FC = () => {
 
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-app-surface border border-app-border">
                   <User className="w-4 h-4 text-cyan-400" />
-                  <span className="text-slate-300 text-sm font-medium">
+                  <span className="text-app-text text-sm font-medium">
                     {JSON.parse(localStorage.getItem('userSession') || '{}').fullName || 'User'}
                   </span>
                 </div>
@@ -133,7 +134,7 @@ const Navbar: React.FC = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-app-text-muted hover:text-app-text hover:bg-app-surface-hover focus:outline-none"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -143,26 +144,26 @@ const Navbar: React.FC = () => {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="md:hidden bg-slate-900 light:bg-slate-100 border-b border-white/10 light:border-black/10">
+        <div className="md:hidden bg-app-surface border-b border-app-border transition-colors">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navItems.map((item) => (
               <Link
                 key={item.name}
                 to={item.path}
                 onClick={() => setIsOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800"
+                className="block px-3 py-2 rounded-md text-base font-medium text-app-text-muted hover:text-app-text hover:bg-app-surface-hover transition-colors"
               >
                 {item.name}
               </Link>
             ))}
-            <div className="pt-4 pb-3 border-t border-white/10">
+            <div className="pt-4 pb-3 border-t border-app-border">
               <div className="flex items-center px-5 space-x-3 mb-4">
                 {['en', 'hi', 'ta'].map((l) => (
                   <button
                     key={l}
                     onClick={() => changeLang(l)}
-                    className={`px-3 py-1 rounded border ${
-                      lang === l ? 'bg-cyan-500 border-cyan-500 text-white' : 'border-white/20 text-slate-400'
+                    className={`px-3 py-1 rounded border transition-colors ${
+                      lang === l ? 'bg-cyan-500 border-cyan-500 text-white' : 'border-app-border text-app-text-muted'
                     }`}
                   >
                     {l.toUpperCase()}
@@ -172,7 +173,7 @@ const Navbar: React.FC = () => {
               {isLoggedIn ? (
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-slate-800"
+                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-500 hover:bg-app-surface-hover transition-colors"
                 >
                   {t.logout}
                 </button>
@@ -180,7 +181,7 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/login"
                   onClick={() => setIsOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-cyan-400 hover:bg-slate-800"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-cyan-400 hover:bg-app-surface-hover transition-colors"
                 >
                   {t.login}
                 </Link>

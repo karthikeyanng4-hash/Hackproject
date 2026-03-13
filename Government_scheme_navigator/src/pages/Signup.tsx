@@ -85,7 +85,7 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4 relative overflow-hidden bg-slate-950 dark:bg-slate-950 light:bg-slate-50 transition-colors">
+    <div className="min-h-screen pt-24 pb-12 flex items-center justify-center px-4 relative overflow-hidden bg-app-bg transition-colors">
       <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-cyan-500/10 blur-[100px] -z-10"></div>
       <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-blue-500/10 blur-[100px] -z-10"></div>
 
@@ -94,13 +94,13 @@ const Signup: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-2xl"
       >
-        <div className="bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/10 dark:border-white/10 light:border-slate-200 rounded-3xl p-8 shadow-2xl transition-colors">
+        <div className="bg-app-surface border border-app-border rounded-3xl p-8 shadow-2xl transition-colors">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-cyan-500 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.4)]">
               <Globe className="text-white w-6 h-6" />
             </div>
-            <h1 className="text-2xl font-bold text-white dark:text-white light:text-slate-900 mb-2">{t.auth.signup_title}</h1>
-            <p className="text-slate-400 text-sm">{t.auth.signup_subtitle}</p>
+            <h1 className="text-2xl font-bold text-app-text mb-2">{t.auth.signup_title}</h1>
+            <p className="text-app-text-muted text-sm">{t.auth.signup_subtitle}</p>
           </div>
 
           {error && (
@@ -114,34 +114,34 @@ const Signup: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Basic Info */}
               <div className="space-y-4">
-                <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest border-b border-white/5 pb-2">Personal Information</h3>
+                <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest border-b border-app-border pb-2">Personal Information</h3>
                 
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.full_name}</label>
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.full_name}</label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input required type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="John Doe" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 pl-11 pr-4 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
+                    <input required type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="John Doe" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 pl-11 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Gender</label>
-                    <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })} className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm">
+                    <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Gender</label>
+                    <select value={formData.gender} onChange={(e) => setFormData({ ...formData, gender: e.target.value })} className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm">
                       <option>Male</option>
                       <option>Female</option>
                       <option>Other</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Date of Birth</label>
-                    <input required type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                    <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Date of Birth</label>
+                    <input required type="date" value={formData.dob} onChange={(e) => setFormData({ ...formData, dob: e.target.value })} className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Marital Status</label>
-                  <select value={formData.maritalStatus} onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value })} className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm">
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Marital Status</label>
+                  <select value={formData.maritalStatus} onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value })} className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm">
                     <option>Single</option>
                     <option>Married</option>
                     <option>Divorced</option>
@@ -150,44 +150,44 @@ const Signup: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Aadhaar Number (Optional)</label>
-                  <input type="text" maxLength={12} value={formData.aadhaar} onChange={(e) => setFormData({ ...formData, aadhaar: e.target.value.replace(/\D/g, '') })} placeholder="XXXX XXXX XXXX" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Aadhaar Number (Optional)</label>
+                  <input type="text" maxLength={12} value={formData.aadhaar} onChange={(e) => setFormData({ ...formData, aadhaar: e.target.value.replace(/\D/g, '') })} placeholder="XXXX XXXX XXXX" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                 </div>
               </div>
 
               {/* Contact & Location */}
               <div className="space-y-4">
-                <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest border-b border-white/5 pb-2">Contact & Location</h3>
+                <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest border-b border-app-border pb-2">Contact & Location</h3>
                 
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.email}</label>
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.email}</label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="name@example.com" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 pl-11 pr-4 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
+                    <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="name@example.com" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 pl-11 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Mobile Number</label>
-                  <input required type="tel" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} placeholder="9876543210" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Mobile Number</label>
+                  <input required type="tel" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} placeholder="9876543210" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">State</label>
-                    <input required type="text" value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} placeholder="e.g. Tamil Nadu" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                    <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">State</label>
+                    <input required type="text" value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} placeholder="e.g. Tamil Nadu" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                   </div>
                   <div>
-                    <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">District</label>
-                    <input required type="text" value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })} placeholder="e.g. Chennai" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                    <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">District</label>
+                    <input required type="text" value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })} placeholder="e.g. Chennai" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Area Type</label>
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Area Type</label>
                   <div className="flex space-x-4">
                     {['Urban', 'Rural'].map((type) => (
-                      <button key={type} type="button" onClick={() => setFormData({ ...formData, areaType: type as any })} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${formData.areaType === type ? 'bg-cyan-500 border-cyan-500 text-white' : 'bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border-white/5 dark:border-white/5 light:border-slate-200 text-slate-400'}`}>
+                      <button key={type} type="button" onClick={() => setFormData({ ...formData, areaType: type as any })} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${formData.areaType === type ? 'bg-cyan-500 border-cyan-500 text-white' : 'bg-app-bg border-app-border text-app-text-muted'}`}>
                         {type}
                       </button>
                     ))}
@@ -196,16 +196,16 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-4 pt-4 border-t border-white/5">
+            <div className="space-y-4 pt-4 border-t border-app-border">
               <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest">Security</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.password}</label>
-                  <input required type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="••••••••" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.password}</label>
+                  <input required type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} placeholder="••••••••" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                 </div>
                 <div>
-                  <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Confirm Password</label>
-                  <input required type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} placeholder="••••••••" className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-100 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-2.5 px-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                  <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Confirm Password</label>
+                  <input required type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} placeholder="••••••••" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                 </div>
               </div>
             </div>
@@ -227,7 +227,7 @@ const Signup: React.FC = () => {
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-slate-500 text-xs">{t.auth.has_account} </span>
+            <span className="text-app-text-muted text-xs">{t.auth.has_account} </span>
             <Link to="/login" className="text-cyan-400 hover:text-cyan-300 transition-colors font-semibold">{t.auth.login_button}</Link>
           </div>
         </div>

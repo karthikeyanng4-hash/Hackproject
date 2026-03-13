@@ -11,6 +11,7 @@ import Schemes from './pages/Schemes';
 import Eligibility from './pages/Eligibility';
 import AiAssistantPage from './pages/AiAssistantPage';
 import About from './pages/About';
+import PersonalDetails from './pages/PersonalDetails';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -38,6 +39,7 @@ const AppContent = () => {
           <Route path="/eligibility" element={<Eligibility />} />
           <Route path="/assistant" element={<AiAssistantPage />} />
           <Route path="/about" element={<About />} />
+          <Route path="/personal-details" element={<PersonalDetails />} />
         </Routes>
       </main>
       {!isAssistantPage && <Footer />}
@@ -59,10 +61,8 @@ export default function App() {
     const applyTheme = (t: string) => {
       if (t === 'dark') {
         document.documentElement.classList.add('dark');
-        document.documentElement.classList.remove('light');
       } else {
         document.documentElement.classList.remove('dark');
-        document.documentElement.classList.add('light');
       }
     };
 

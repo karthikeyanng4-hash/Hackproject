@@ -52,7 +52,7 @@ const About: React.FC = () => {
   ];
 
   return (
-    <div className="pt-24 min-h-screen">
+    <div className="pt-24 min-h-screen bg-app-bg transition-colors">
       <section className="py-20 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-500/10 blur-[120px] rounded-full -z-10"></div>
         
@@ -61,15 +61,15 @@ const About: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 light:bg-cyan-100 border border-cyan-500/20 light:border-cyan-200 mb-6"
+              className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6"
             >
-              <Zap className="w-4 h-4 text-cyan-400 light:text-cyan-600" />
-              <span className="text-xs font-bold text-cyan-400 light:text-cyan-600 uppercase tracking-widest">{t.home.learn_more}</span>
+              <Zap className="w-4 h-4 text-cyan-400" />
+              <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">{t.home.learn_more}</span>
             </motion.div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white light:text-slate-900 mb-6 tracking-tight">
+            <h1 className="text-4xl md:text-6xl font-bold text-app-text mb-6 tracking-tight">
               {lang === 'hi' ? "GovAssist AI कैसे काम करता है?" : lang === 'ta' ? "GovAssist AI எப்படி வேலை செய்கிறது?" : "How GovAssist AI Works"}
             </h1>
-            <p className="text-xl text-slate-400 light:text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-app-text-muted max-w-3xl mx-auto leading-relaxed">
               {lang === 'hi' ? "हम तकनीक और पारदर्शिता का उपयोग करके सरकारी कल्याण को सभी के लिए सुलभ बनाते हैं।" : lang === 'ta' ? "தொழில்நுட்பம் மற்றும் வெளிப்படைத்தன்மையைப் பயன்படுத்தி அரசு நலத்திட்டங்களை அனைவருக்கும் அணுகக்கூடியதாக மாற்றுகிறோம்." : "We bridge the gap between complex government policies and the citizens who need them using advanced AI."}
             </p>
           </div>
@@ -82,23 +82,23 @@ const About: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-3xl bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/5 dark:border-white/5 light:border-slate-200 shadow-xl relative group"
+                className="p-8 rounded-3xl bg-app-surface border border-app-border shadow-xl relative group transition-colors"
               >
                 <div className={`w-14 h-14 rounded-2xl ${step.bg} flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
                   <step.icon className={`w-7 h-7 ${step.color}`} />
                 </div>
-                <h3 className="text-xl font-bold text-white dark:text-white light:text-slate-900 mb-4">{step.title}</h3>
-                <p className="text-slate-400 dark:text-slate-400 light:text-slate-600 text-sm leading-relaxed">
+                <h3 className="text-xl font-bold text-app-text mb-4">{step.title}</h3>
+                <p className="text-app-text-muted text-sm leading-relaxed">
                   {step.desc}
                 </p>
-                <div className="absolute top-4 right-8 text-6xl font-black text-white/5 dark:text-white/5 light:text-black/5 -z-0">0{i+1}</div>
+                <div className="absolute top-4 right-8 text-6xl font-black text-app-text/5 -z-0">0{i+1}</div>
               </motion.div>
             ))}
           </div>
 
-          <div className="mt-32 bg-slate-900 light:bg-white border border-white/10 light:border-slate-200 rounded-[40px] p-12 text-center relative overflow-hidden">
+          <div className="mt-32 bg-app-surface border border-app-border rounded-[40px] p-12 text-center relative overflow-hidden transition-colors">
             <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] -z-10"></div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white light:text-slate-900 mb-8">{t.home.ready_title}</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-app-text mb-8">{t.home.ready_title}</h2>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
               <Link
                 to="/assistant"
@@ -109,7 +109,7 @@ const About: React.FC = () => {
               </Link>
               <Link
                 to="/schemes"
-                className="px-8 py-4 rounded-full bg-white/5 dark:bg-white/5 light:bg-slate-100 text-white dark:text-white light:text-slate-900 font-bold border border-white/10 dark:border-white/10 light:border-slate-200 hover:bg-white/10 transition-all"
+                className="px-8 py-4 rounded-full bg-app-bg text-app-text font-bold border border-app-border hover:bg-app-surface transition-all"
               >
                 {t.nav.schemes}
               </Link>

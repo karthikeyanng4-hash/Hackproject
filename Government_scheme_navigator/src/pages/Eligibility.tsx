@@ -57,10 +57,10 @@ const Eligibility: React.FC = () => {
   };
 
   return (
-    <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-app-bg transition-colors">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-white dark:text-white light:text-slate-900 mb-4 tracking-tight">{t.eligibility.title}</h1>
-        <p className="text-slate-400 max-w-2xl mx-auto">{t.eligibility.subtitle}</p>
+        <h1 className="text-4xl font-bold text-app-text mb-4 tracking-tight">{t.eligibility.title}</h1>
+        <p className="text-app-text-muted max-w-2xl mx-auto">{t.eligibility.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -68,34 +68,34 @@ const Eligibility: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/10 dark:border-white/10 light:border-slate-200 rounded-3xl p-8 shadow-2xl"
+          className="bg-app-surface border border-app-border rounded-3xl p-8 shadow-2xl transition-colors"
         >
           <form onSubmit={handleCheck} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.full_name}</label>
+                <label className="block text-app-text-muted text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.full_name}</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
                   <input
                     required
                     type="text"
                     value={profile.name}
                     onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-50 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all"
+                    className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all"
                     placeholder="Your Name"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.age}</label>
+                <label className="block text-app-text-muted text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.age}</label>
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
                   <input
                     required
                     type="number"
                     value={profile.age}
                     onChange={(e) => setProfile({ ...profile, age: parseInt(e.target.value) })}
-                    className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-50 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all"
+                    className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all"
                   />
                 </div>
               </div>
@@ -103,13 +103,13 @@ const Eligibility: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.gender}</label>
+                <label className="block text-app-text-muted text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.gender}</label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
                   <select
                     value={profile.gender}
                     onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                    className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-50 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
+                    className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
                   >
                     <option>Male</option>
                     <option>Female</option>
@@ -118,13 +118,13 @@ const Eligibility: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.occupation}</label>
+                <label className="block text-app-text-muted text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.occupation}</label>
                 <div className="relative">
-                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
                   <select
                     value={profile.occupation}
                     onChange={(e) => setProfile({ ...profile, occupation: e.target.value })}
-                    className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-50 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
+                    className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
                   >
                     <option>Student</option>
                     <option>Farmer</option>
@@ -139,13 +139,13 @@ const Eligibility: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.education}</label>
+                <label className="block text-app-text-muted text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.education}</label>
                 <div className="relative">
-                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <GraduationCap className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
                   <select
                     value={profile.education}
                     onChange={(e) => setProfile({ ...profile, education: e.target.value })}
-                    className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-50 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
+                    className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
                   >
                     <option>None</option>
                     <option>10th Pass</option>
@@ -156,15 +156,15 @@ const Eligibility: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.income}</label>
+                <label className="block text-app-text-muted text-xs font-bold uppercase tracking-widest mb-2 ml-1">{t.eligibility.income}</label>
                 <div className="relative">
-                  <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-app-text-muted" />
                   <input
                     required
                     type="number"
                     value={profile.income}
                     onChange={(e) => setProfile({ ...profile, income: parseInt(e.target.value) })}
-                    className="w-full bg-slate-800 dark:bg-slate-800 light:bg-slate-50 border border-white/5 dark:border-white/5 light:border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-white dark:text-white light:text-slate-900 focus:outline-none focus:border-cyan-500/50 transition-all"
+                    className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all"
                     placeholder="e.g. 500000"
                   />
                 </div>
@@ -194,20 +194,20 @@ const Eligibility: React.FC = () => {
         {/* Results Section */}
         <div className="space-y-6">
           {!results && !isProcessing && (
-            <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-slate-900/50 dark:bg-slate-900/50 light:bg-slate-100 border border-dashed border-white/10 dark:border-white/10 light:border-slate-300 rounded-3xl">
-              <FileCheck className="w-16 h-16 text-slate-700 mb-6" />
-              <h3 className="text-xl font-bold text-white dark:text-white light:text-slate-900 mb-2">{t.eligibility.ready}</h3>
-              <p className="text-slate-500 text-sm">{t.eligibility.ready_desc}</p>
+            <div className="h-full flex flex-col items-center justify-center text-center p-12 bg-app-surface/50 border border-dashed border-app-border rounded-3xl transition-colors">
+              <FileCheck className="w-16 h-16 text-app-text-muted mb-6" />
+              <h3 className="text-xl font-bold text-app-text mb-2">{t.eligibility.ready}</h3>
+              <p className="text-app-text-muted text-sm">{t.eligibility.ready_desc}</p>
             </div>
           )}
 
           {isProcessing && (
             <div className="space-y-4">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/5 dark:border-white/5 light:border-slate-200 p-6 rounded-3xl animate-pulse">
-                  <div className="h-4 bg-slate-800 dark:bg-slate-800 light:bg-slate-100 rounded w-1/4 mb-4"></div>
-                  <div className="h-6 bg-slate-800 dark:bg-slate-800 light:bg-slate-100 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-slate-800 dark:bg-slate-800 light:bg-slate-100 rounded w-1/2"></div>
+                <div key={i} className="bg-app-surface border border-app-border p-6 rounded-3xl animate-pulse">
+                  <div className="h-4 bg-app-bg rounded w-1/4 mb-4"></div>
+                  <div className="h-6 bg-app-bg rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-app-bg rounded w-1/2"></div>
                 </div>
               ))}
             </div>
@@ -220,7 +220,7 @@ const Eligibility: React.FC = () => {
               className="space-y-4"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white dark:text-white light:text-slate-900">{t.eligibility.results_title}</h3>
+                <h3 className="text-lg font-bold text-app-text">{t.eligibility.results_title}</h3>
                 <span className="text-xs text-emerald-400 font-bold uppercase tracking-widest">{(t.eligibility.matches_found || '').replace('{count}', results.length.toString())}</span>
               </div>
               
@@ -230,7 +230,7 @@ const Eligibility: React.FC = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/5 dark:border-white/5 light:border-slate-200 p-6 rounded-3xl hover:border-cyan-500/30 transition-all group"
+                  className="bg-app-surface border border-app-border p-6 rounded-3xl hover:border-cyan-500/30 transition-all group"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -243,10 +243,10 @@ const Eligibility: React.FC = () => {
                           <span>{scheme.score}% Match</span>
                         </div>
                       </div>
-                      <h4 className="text-white dark:text-white light:text-slate-900 font-bold mb-2 group-hover:text-cyan-400 transition-colors">{scheme.name}</h4>
-                      <p className="text-slate-400 text-xs line-clamp-2 mb-4">{scheme.description}</p>
+                      <h4 className="text-app-text font-bold mb-2 group-hover:text-cyan-400 transition-colors">{scheme.name}</h4>
+                      <p className="text-app-text-muted text-xs line-clamp-2 mb-4">{scheme.description}</p>
                     </div>
-                    <button className="p-2 bg-white/5 dark:bg-white/5 light:bg-slate-100 rounded-full text-slate-400 hover:bg-cyan-500 hover:text-white transition-all">
+                    <button className="p-2 bg-app-bg rounded-full text-app-text-muted hover:bg-cyan-500 hover:text-white transition-all">
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -256,7 +256,7 @@ const Eligibility: React.FC = () => {
               <div className="pt-6">
                 <button 
                   onClick={() => setResults(null)}
-                  className="text-xs text-slate-500 hover:text-white dark:hover:text-white light:hover:text-slate-900 transition-colors font-bold uppercase tracking-widest"
+                  className="text-xs text-app-text-muted hover:text-app-text transition-colors font-bold uppercase tracking-widest"
                 >
                   {t.eligibility.clear}
                 </button>

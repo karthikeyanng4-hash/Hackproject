@@ -8,6 +8,7 @@
       "assistant": "AI Assistant",
       "about": "About",
       "contact": "Contact",
+      "personal_details": "Personal Details",
       "login": "Login",
       "signup": "Sign Up",
       "logout": "Logout"
@@ -151,6 +152,18 @@
       "clear": "Clear Results & Start Over",
       "ready": "Ready to Analyze",
       "ready_desc": "Fill out the form to see which government schemes match your profile."
+    },
+    "personal_details": {
+      "title": "Personal Documents & Details",
+      "subtitle": "Securely store your official document details for quicker scheme applications. Data is stored locally on your device.",
+      "aadhar": "Aadhar Card Number",
+      "pan": "PAN Card Number",
+      "income_cert": "Income Certificate No.",
+      "voter_id": "Voter ID Number",
+      "save_success": "Details saved successfully!",
+      "upload_doc": "Upload Document",
+      "stored_docs": "Stored Documents",
+      "login_required": "Please login to view and manage your personal documents."
     }
   },
   "hi": {
@@ -162,6 +175,7 @@
       "assistant": "एआई सहायक",
       "about": "हमारे बारे में",
       "contact": "संपर्क करें",
+      "personal_details": "व्यक्तिगत विवरण",
       "login": "लॉगिन",
       "signup": "साइन अप",
       "logout": "लॉगआउट"
@@ -273,6 +287,18 @@
       "ready": "विश्लेषण के लिए तैयार",
       "ready_desc": "यह देखने के लिए फ़ॉर्म भरें कि कौन सी सरकारी योजनाएं आपकी प्रोफ़ाइल से मेल खाती हैं।"
     },
+    "personal_details": {
+      "title": "व्यक्तिगत दस्तावेज़ और विवरण",
+      "subtitle": "तेजी से योजना आवेदनों के लिए अपने आधिकारिक दस्तावेज़ विवरण सुरक्षित रूप से संग्रहीत करें। डेटा आपके डिवाइस पर स्थानीय रूप से संग्रहीत है।",
+      "aadhar": "आधार कार्ड नंबर",
+      "pan": "पैन कार्ड नंबर",
+      "income_cert": "आय प्रमाणपत्र संख्या",
+      "voter_id": "वोटर आईडी नंबर",
+      "save_success": "विवरण सफलतापूर्वक सहेजा गया!",
+      "upload_doc": "दस्तावेज़ अपलोड करें",
+      "stored_docs": "संग्रहीत दस्तावेज़",
+      "login_required": "अपने व्यक्तिगत दस्तावेज़ों को देखने और प्रबंधित करने के लिए कृपया लॉगिन करें।"
+    },
     "dashboard": {
       "welcome": "वापसी पर स्वागत है",
       "overview": "यहाँ आपकी सरकारी कल्याण स्थिति का अवलोकन है।",
@@ -316,6 +342,7 @@
       "assistant": "AI உதவியாளர்",
       "about": "எங்களைப் பற்றி",
       "contact": "தொடர்பு",
+      "personal_details": "தனிப்பட்ட விவரங்கள்",
       "login": "உள்நுழை",
       "signup": "பதிவு செய்",
       "logout": "வெளியேறு"
@@ -459,6 +486,18 @@
       "clear": "முடிவுகளை அழித்து மீண்டும் தொடங்கவும்",
       "ready": "பகுப்பாய்வு செய்ய தயார்",
       "ready_desc": "உங்கள் சுயவிவரத்துடன் எந்த அரசுத் திட்டங்கள் பொருந்துகின்றன என்பதைக் காண படிவத்தை நிரப்பவும்."
+    },
+    "personal_details": {
+      "title": "தனிப்பட்ட ஆவணங்கள் & விவரங்கள்",
+      "subtitle": "விரைவான திட்ட விண்ணப்பங்களுக்காக உங்கள் அதிகாரப்பூர்வ ஆவண விவரங்களை பாதுகாப்பாக சேமிக்கவும். தரவு உங்கள் சாதனத்தில் உள்ளூர் சேமிப்பகத்தில் சேமிக்கப்படும்.",
+      "aadhar": "ஆதார் அட்டை எண்",
+      "pan": "பான் கார்டு எண்",
+      "income_cert": "வருமானச் சான்றிதழ் எண்",
+      "voter_id": "வாக்காளர் அடையாள அட்டை எண்",
+      "save_success": "விவரங்கள் வெற்றிகரமாக சேமிக்கப்பட்டன!",
+      "upload_doc": "ஆவணத்தைப் பதிவேற்றவும்",
+      "stored_docs": "சேமிக்கப்பட்ட ஆவணங்கள்",
+      "login_required": "உங்கள் தனிப்பட்ட ஆவணங்களைக் காணவும் நிர்வகிக்கவும் தயவுசெய்து உள்நுழையவும்."
     }
   }
 }

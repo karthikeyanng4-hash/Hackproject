@@ -207,27 +207,27 @@ const Schemes: React.FC = () => {
   };
 
   return (
-    <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-app-bg min-h-screen transition-colors">
       {/* Search & Filter Header */}
       <div className="mb-12">
-        <h1 className="text-4xl font-bold text-white dark:text-white light:text-slate-900 mb-4 tracking-tight">{t.nav.schemes}</h1>
-        <p className="text-slate-400 mb-8 max-w-2xl">{t.schemes.subtitle}</p>
+        <h1 className="text-4xl font-bold text-app-text mb-4 tracking-tight">{t.nav.schemes}</h1>
+        <p className="text-app-text-muted mb-8 max-w-2xl">{t.schemes.subtitle}</p>
         
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-app-text-muted" />
             <input
               ref={searchInputRef}
               type="text"
               placeholder={t.schemes.search_placeholder + " (Ctrl + K)"}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/10 dark:border-white/10 light:border-slate-200 rounded-2xl py-4 pl-12 pr-12 text-white dark:text-white light:text-slate-900 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all shadow-xl"
+              className="w-full bg-app-surface border border-app-border rounded-2xl py-4 pl-12 pr-12 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all shadow-xl"
             />
             <button
               onClick={toggleVoiceSearch}
               className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${
-                isListening ? 'bg-red-500 text-white animate-pulse' : 'text-slate-500 hover:text-cyan-400'
+                isListening ? 'bg-red-500 text-white animate-pulse' : 'text-app-text-muted hover:text-cyan-400'
               }`}
             >
               {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -254,7 +254,7 @@ const Schemes: React.FC = () => {
                 className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
                   selectedCategory === cat 
                     ? 'bg-cyan-500 border-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
-                    : 'bg-slate-900 dark:bg-slate-900 light:bg-slate-100 border-white/10 dark:border-white/10 light:border-slate-200 text-slate-400 hover:border-white/30'
+                    : 'bg-app-surface border-app-border text-app-text-muted hover:border-app-text-muted/30'
                 }`}
               >
                 {cat}
@@ -273,7 +273,7 @@ const Schemes: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
             onClick={() => { stopSpeaking(); setSelectedScheme(scheme); }}
-            className="bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/5 dark:border-white/5 light:border-slate-200 rounded-3xl p-6 hover:border-cyan-500/30 transition-all group cursor-pointer relative overflow-hidden"
+            className="bg-app-surface border border-app-border rounded-3xl p-6 hover:border-cyan-500/30 transition-all group cursor-pointer relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 -mr-16 -mt-16 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all"></div>
             
@@ -281,18 +281,18 @@ const Schemes: React.FC = () => {
               <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold uppercase tracking-widest border border-cyan-500/20">
                 {scheme.category}
               </span>
-              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="w-4 h-4 text-app-text-muted group-hover:text-cyan-400 group-hover:translate-x-1 transition-all" />
             </div>
             
-            <h3 className="text-lg font-bold text-white dark:text-white light:text-slate-900 mb-3 group-hover:text-cyan-400 transition-colors leading-tight">{scheme.name}</h3>
-            <p className="text-slate-400 text-sm line-clamp-3 mb-6 leading-relaxed">{scheme.description}</p>
+            <h3 className="text-lg font-bold text-app-text mb-3 group-hover:text-cyan-400 transition-colors leading-tight">{scheme.name}</h3>
+            <p className="text-app-text-muted text-sm line-clamp-3 mb-6 leading-relaxed">{scheme.description}</p>
             
-            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/5 dark:border-white/5 light:border-slate-100">
-              <div className="flex items-center space-x-2 text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-app-border">
+              <div className="flex items-center space-x-2 text-[10px] text-app-text-muted uppercase tracking-wider font-bold">
                 <User className="w-3 h-3 text-cyan-500" />
                 <span>{t.schemes.age}: {scheme.minimum_age}-{scheme.maximum_age}</span>
               </div>
-              <div className="flex items-center space-x-2 text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+              <div className="flex items-center space-x-2 text-[10px] text-app-text-muted uppercase tracking-wider font-bold">
                 <IndianRupee className="w-3 h-3 text-emerald-500" />
                 <span>{t.schemes.limit}: ₹{scheme.income_limit.toLocaleString()}</span>
               </div>
@@ -303,11 +303,11 @@ const Schemes: React.FC = () => {
 
       {filteredSchemes.length === 0 && (
         <div className="py-20 text-center">
-          <div className="w-20 h-20 bg-slate-900 dark:bg-slate-900 light:bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 border border-white/5">
-            <Search className="w-8 h-8 text-slate-700" />
+          <div className="w-20 h-20 bg-app-surface rounded-full flex items-center justify-center mx-auto mb-6 border border-app-border">
+            <Search className="w-8 h-8 text-app-text-muted/30" />
           </div>
-          <h3 className="text-xl font-bold text-white dark:text-white light:text-slate-900 mb-2">{t.schemes.no_results}</h3>
-          <p className="text-slate-500">{t.schemes.no_results_desc}</p>
+          <h3 className="text-xl font-bold text-app-text mb-2">{t.schemes.no_results}</h3>
+          <p className="text-app-text-muted">{t.schemes.no_results_desc}</p>
         </div>
       )}
 
@@ -320,20 +320,20 @@ const Schemes: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCloseModal}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              className="absolute inset-0 bg-app-bg/80 backdrop-blur-md"
             />
             
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-4xl bg-slate-900 dark:bg-slate-900 light:bg-white border border-white/10 dark:border-white/10 light:border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              className="relative w-full max-w-4xl bg-app-surface border border-app-border rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors"
             >
               <div className="p-6 sm:p-8 overflow-y-auto custom-scrollbar">
                 {/* Close button */}
                 <button 
                   onClick={handleCloseModal}
-                  className="absolute top-6 right-6 p-2 rounded-full bg-white/5 dark:bg-white/5 light:bg-slate-100 text-slate-400 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/10 transition-all"
+                  className="absolute top-6 right-6 p-2 rounded-full bg-app-bg text-app-text-muted hover:text-app-text hover:bg-app-surface-hover transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -344,7 +344,7 @@ const Schemes: React.FC = () => {
                   className={`absolute top-6 right-16 p-2 rounded-full transition-all ${
                     isSpeaking
                       ? 'bg-cyan-500 text-white shadow-[0_0_12px_rgba(6,182,212,0.5)] animate-pulse'
-                      : 'bg-white/5 dark:bg-white/5 light:bg-slate-100 text-slate-400 hover:text-cyan-400 hover:bg-white/10'
+                      : 'bg-app-bg text-app-text-muted hover:text-cyan-400 hover:bg-app-surface-hover'
                   }`}
                 >
                   {isSpeaking ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
@@ -354,57 +354,57 @@ const Schemes: React.FC = () => {
                   <span className="inline-block px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-bold uppercase tracking-widest border border-cyan-500/20 mb-4">
                     {selectedScheme.category}
                   </span>
-                  <h2 className="text-3xl font-bold text-white dark:text-white light:text-slate-900 mb-4 leading-tight">{selectedScheme.name}</h2>
-                  <p className="text-slate-400 text-lg leading-relaxed">{selectedScheme.description}</p>
+                  <h2 className="text-3xl font-bold text-app-text mb-4 leading-tight">{selectedScheme.name}</h2>
+                  <p className="text-app-text-muted text-lg leading-relaxed">{selectedScheme.description}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                   <div className="space-y-6">
-                    <div className="bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-50 rounded-2xl p-6 border border-white/5 dark:border-white/5 light:border-slate-200">
-                      <h4 className="text-white dark:text-white light:text-slate-900 font-bold mb-4 flex items-center space-x-2">
+                    <div className="bg-app-bg/50 rounded-2xl p-6 border border-app-border">
+                      <h4 className="text-app-text font-bold mb-4 flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-cyan-400" />
                         <span>{t.schemes.eligibility_criteria}</span>
                       </h4>
                       <ul className="space-y-3">
                         <li className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500">{t.schemes.age_range}</span>
-                          <span className="text-slate-200 dark:text-slate-200 light:text-slate-700 font-medium">{selectedScheme.minimum_age} - {selectedScheme.maximum_age} {t.schemes.age}</span>
+                          <span className="text-app-text-muted">{t.schemes.age_range}</span>
+                          <span className="text-app-text font-medium">{selectedScheme.minimum_age} - {selectedScheme.maximum_age} {t.schemes.age}</span>
                         </li>
                         <li className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500">{t.schemes.income_limit}</span>
-                          <span className="text-slate-200 dark:text-slate-200 light:text-slate-700 font-medium">Up to ₹{selectedScheme.income_limit.toLocaleString()} / Year</span>
+                          <span className="text-app-text-muted">{t.schemes.income_limit}</span>
+                          <span className="text-app-text font-medium">Up to ₹{selectedScheme.income_limit.toLocaleString()} / Year</span>
                         </li>
                         <li className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500">{t.schemes.occupation}</span>
-                          <span className="text-slate-200 dark:text-slate-200 light:text-slate-700 font-medium">{selectedScheme.occupation}</span>
+                          <span className="text-app-text-muted">{t.schemes.occupation}</span>
+                          <span className="text-app-text font-medium">{selectedScheme.occupation}</span>
                         </li>
                         <li className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500">{t.schemes.education}</span>
-                          <span className="text-slate-200 dark:text-slate-200 light:text-slate-700 font-medium">{selectedScheme.education_required}</span>
+                          <span className="text-app-text-muted">{t.schemes.education}</span>
+                          <span className="text-app-text font-medium">{selectedScheme.education_required}</span>
                         </li>
                       </ul>
                     </div>
 
-                    <div className="bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-50 rounded-2xl p-6 border border-white/5 dark:border-white/5 light:border-slate-200">
-                      <h4 className="text-white dark:text-white light:text-slate-900 font-bold mb-4 flex items-center space-x-2">
+                    <div className="bg-app-bg/50 rounded-2xl p-6 border border-app-border">
+                      <h4 className="text-app-text font-bold mb-4 flex items-center space-x-2">
                         <MapPin className="w-4 h-4 text-cyan-400" />
                         <span>{t.schemes.availability}</span>
                       </h4>
-                      <p className="text-slate-300 dark:text-slate-300 light:text-slate-600 text-sm">{selectedScheme.state_availability}</p>
+                      <p className="text-app-text-muted text-sm">{selectedScheme.state_availability}</p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    <div className="bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-50 rounded-2xl p-6 border border-white/5 dark:border-white/5 light:border-slate-200">
-                      <h4 className="text-white dark:text-white light:text-slate-900 font-bold mb-4 flex items-center space-x-2">
+                    <div className="bg-app-bg/50 rounded-2xl p-6 border border-app-border">
+                      <h4 className="text-app-text font-bold mb-4 flex items-center space-x-2">
                         <SparklesIcon className="w-4 h-4 text-cyan-400" />
                         <span>{t.schemes.key_benefits}</span>
                       </h4>
-                      <p className="text-slate-300 dark:text-slate-300 light:text-slate-600 text-sm leading-relaxed">{selectedScheme.benefits}</p>
+                      <p className="text-app-text-muted text-sm leading-relaxed">{selectedScheme.benefits}</p>
                     </div>
 
-                    <div className="bg-slate-800/50 dark:bg-slate-800/50 light:bg-slate-50 rounded-2xl p-6 border border-white/5 dark:border-white/5 light:border-slate-200">
-                      <h4 className="text-white dark:text-white light:text-slate-900 font-bold mb-4 flex items-center space-x-2">
+                    <div className="bg-app-bg/50 rounded-2xl p-6 border border-app-border">
+                      <h4 className="text-app-text font-bold mb-4 flex items-center space-x-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                         <span>{t.schemes.required_documents}</span>
                       </h4>
@@ -434,7 +434,7 @@ const Schemes: React.FC = () => {
                     className={`w-full sm:w-auto px-8 py-4 rounded-2xl font-bold border transition-all ${
                       isSaved 
                         ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400'
-                        : 'bg-white/5 dark:bg-white/5 light:bg-slate-100 text-white dark:text-white light:text-slate-900 border border-white/10 dark:border-white/10 light:border-slate-200 hover:bg-white/10'
+                        : 'bg-app-bg text-app-text border-app-border hover:bg-app-surface-hover'
                     }`}
                   >
                     {isSaved 
@@ -446,7 +446,7 @@ const Schemes: React.FC = () => {
                     className={`w-full sm:w-auto px-8 py-4 rounded-2xl font-bold border transition-all flex items-center justify-center space-x-2 ${
                       isSpeaking
                         ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
-                        : 'bg-white/5 dark:bg-white/5 light:bg-slate-100 border-white/10 dark:border-white/10 light:border-slate-200 text-slate-300 hover:border-cyan-500/40 hover:text-cyan-400'
+                        : 'bg-app-bg border-app-border text-app-text-muted hover:border-cyan-500/40 hover:text-cyan-400'
                     }`}
                   >
                     {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

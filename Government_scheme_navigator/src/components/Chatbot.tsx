@@ -205,54 +205,56 @@ const Chatbot: React.FC = () => {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className={`bg-slate-900 border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
+            className={`bg-app-surface border border-app-border rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
               isMinimized ? 'h-16 w-72' : 'h-[500px] w-[350px] sm:w-[400px]'
             }`}
           >
             {/* Header */}
-            <div className="bg-slate-800 p-4 flex items-center justify-between border-b border-white/5">
+            <div className="bg-app-surface p-4 flex items-center justify-between border-b border-app-border transition-colors">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center">
                   <Bot className="text-white w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-white text-sm font-semibold">GovAssist AI</h3>
+                  <h3 className="text-app-text text-sm font-semibold transition-colors">GovAssist AI</h3>
                   <div className="flex items-center space-x-1">
                     <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    <span className="text-slate-400 text-[10px]">Online</span>
+                    <span className="text-app-text-muted text-[10px] transition-colors">Online</span>
                   </div>
                 </div>
               </div>
-                <button 
-                  onClick={toggleMute}
-                  className={`text-slate-400 hover:text-white transition-colors ${isMuted ? 'text-red-400' : ''}`}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-                <button 
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="text-slate-400 hover:text-white transition-colors"
-                >
-                  {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
-                </button>
-                <button 
-                  onClick={() => setIsOpen(false)}
-                  className="text-slate-400 hover:text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    onClick={toggleMute}
+                    className={`p-1.5 rounded-lg hover:bg-app-bg text-app-text-muted hover:text-app-text transition-colors ${isMuted ? 'text-red-400' : ''}`}
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  <button 
+                    onClick={() => setIsMinimized(!isMinimized)}
+                    className="p-1.5 rounded-lg hover:bg-app-bg text-app-text-muted hover:text-app-text transition-colors"
+                  >
+                    {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+                  </button>
+                  <button 
+                    onClick={() => setIsOpen(false)}
+                    className="p-1.5 rounded-lg hover:bg-app-bg text-app-text-muted hover:text-app-text transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
             {!isMinimized && (
               <>
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-app-bg transition-colors">
                   {messages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+                      <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm transition-all ${
                         msg.role === 'user' 
-                          ? 'bg-cyan-500 text-white rounded-tr-none' 
-                          : 'bg-slate-800 text-slate-200 rounded-tl-none border border-white/5'
+                          ? 'bg-cyan-500 text-white rounded-tr-none shadow-sm' 
+                          : 'bg-app-surface text-app-text rounded-tl-none border border-app-border shadow-sm'
                       }`}>
                         {msg.text}
                         {msg.options && (
@@ -261,7 +263,7 @@ const Chatbot: React.FC = () => {
                               <button
                                 key={i}
                                 onClick={() => handleOptionClick(opt)}
-                                className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-xs transition-colors border border-white/10"
+                                className="px-3 py-1 bg-app-bg hover:bg-app-surface-hover text-app-text-muted hover:text-app-text rounded-full text-xs transition-colors border border-app-border"
                               >
                                 {opt}
                               </button>
@@ -273,7 +275,7 @@ const Chatbot: React.FC = () => {
                   ))}
                   {isTyping && (
                     <div className="flex justify-start">
-                      <div className="bg-slate-800 text-slate-400 rounded-2xl rounded-tl-none px-4 py-2 text-xs border border-white/5 flex items-center space-x-2">
+                      <div className="bg-app-surface text-app-text-muted rounded-2xl rounded-tl-none px-4 py-2 text-xs border border-app-border flex items-center space-x-2 transition-colors">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         <span>{t.typing}</span>
                       </div>
@@ -283,7 +285,7 @@ const Chatbot: React.FC = () => {
                 </div>
 
                 {/* Input */}
-                <div className="p-4 border-t border-white/5 bg-slate-900/50">
+                <div className="p-4 border-t border-app-border bg-app-surface transition-colors">
                   <div className="relative">
                     <input
                       type="text"
@@ -291,7 +293,7 @@ const Chatbot: React.FC = () => {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                       placeholder="Type your message..."
-                      className="w-full bg-slate-800 border border-white/10 rounded-full py-2 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-all"
+                      className="w-full bg-app-bg border border-app-border rounded-full py-2 pl-4 pr-12 text-sm text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all"
                     />
                     <button
                       onClick={() => handleSend()}
@@ -310,12 +312,12 @@ const Chatbot: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
-          isOpen ? 'bg-slate-800 text-white rotate-90' : 'bg-cyan-500 text-white'
+          isOpen ? 'bg-app-surface text-app-text rotate-90 border border-app-border' : 'bg-cyan-500 text-white'
         }`}
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
         {!isOpen && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-slate-950 animate-bounce"></span>
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-app-bg animate-bounce"></span>
         )}
       </button>
     </div>
