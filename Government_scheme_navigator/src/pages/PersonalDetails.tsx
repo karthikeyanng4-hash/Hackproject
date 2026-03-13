@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Save, ShieldCheck, Upload, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { FileText, Save, ShieldCheck, Upload, Trash2, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import translations from '../data/translations.json';
 
 interface UploadedDocument {
@@ -18,6 +18,8 @@ const PersonalDetails: React.FC = () => {
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
   const [otherDocuments, setOtherDocuments] = useState<UploadedDocument[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<{id: string, name: string} | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,15 +28,9 @@ const PersonalDetails: React.FC = () => {
       setIsLoggedIn(false);
     } else {
       setIsLoggedIn(true);
-      // Load saved documents from local storage
-      const savedDocs = localStorage.getItem('uploadedDocuments');
-      if (savedDocs) {
-        setUploadedDocuments(JSON.parse(savedDocs));
-      }
-      const savedOtherDocs = localStorage.getItem('otherDocuments');
-      if (savedOtherDocs) {
-        setOtherDocuments(JSON.parse(savedOtherDocs));
-      }
+      const user = JSON.parse(session);
+      fetchUserData(user.id);
+      fetchDocuments(user.id);
     }
 
     const handleLangChange = () => {
@@ -45,50 +41,101 @@ const PersonalDetails: React.FC = () => {
     return () => window.removeEventListener('languageChange', handleLangChange);
   }, []);
 
+  const fetchUserData = async (userId: number) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/${userId}`);
+      const data = await response.json();
+      if (response.ok) {
+        // You could set some profile state here if needed
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+    }
+  };
+
+  const fetchDocuments = async (userId: number) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/documents/${userId}`);
+      const data = await response.json();
+      if (response.ok) {
+        const formattedDocs = data.map((doc: any) => ({
+          id: doc.id.toString(),
+          name: doc.file_path.split('\\').pop().split('/').pop(),
+          type: 'application/pdf', // Mock type or store in DB
+          size: 1024 * 1024, // Mock size or store in DB
+          uploadDate: new Date(doc.uploaded_at).toLocaleDateString(),
+          category: doc.document_type
+        }));
+        setUploadedDocuments(formattedDocs.filter((d: any) => d.category !== 'other'));
+        setOtherDocuments(formattedDocs.filter((d: any) => d.category === 'other'));
+      }
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+    }
+  };
+
   const t = (translations as any)[lang].personal_details;
   const commonT = (translations as any)[lang].auth;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, category: 'aadhar' | 'pan' | 'income' | 'other') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, category: 'aadhar' | 'pan' | 'income' | 'other') => {
     const file = e.target.files?.[0];
-    if (file) {
-      const newDoc: UploadedDocument = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        uploadDate: new Date().toLocaleDateString(),
-        category,
-      };
-      
-      if (category !== 'other') {
-        // If it's one of the primary documents, replace existing one
-        const updatedDocs = uploadedDocuments.filter(doc => doc.category !== category);
-        const finalDocs = [...updatedDocs, newDoc];
-        setUploadedDocuments(finalDocs);
-        localStorage.setItem('uploadedDocuments', JSON.stringify(finalDocs));
-      } else {
-        // Handle other documents separately
-        const updatedOtherDocs = [...otherDocuments, newDoc];
-        setOtherDocuments(updatedOtherDocs);
-        localStorage.setItem('otherDocuments', JSON.stringify(updatedOtherDocs));
+    const session = localStorage.getItem('userSession');
+    if (file && session) {
+      const user = JSON.parse(session);
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('userId', user.id);
+      formData.append('userName', user.name);
+      formData.append('documentType', category);
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          fetchDocuments(user.id);
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert('Upload failed. Please try again.');
       }
-      
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
     }
   };
 
-  const removeDocument = (id: string, category: 'aadhar' | 'pan' | 'income' | 'other') => {
-    if (category !== 'other') {
-      const updatedDocs = uploadedDocuments.filter(doc => doc.id !== id);
-      setUploadedDocuments(updatedDocs);
-      localStorage.setItem('uploadedDocuments', JSON.stringify(updatedDocs));
-    } else {
-      const updatedOtherDocs = otherDocuments.filter(doc => doc.id !== id);
-      setOtherDocuments(updatedOtherDocs);
-      localStorage.setItem('otherDocuments', JSON.stringify(updatedOtherDocs));
+  const removeDocument = (id: string, name: string) => {
+    setDocToDelete({ id, name });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!docToDelete) return;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/documents/${docToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const session = localStorage.getItem('userSession');
+        if (session) {
+          const user = JSON.parse(session);
+          fetchDocuments(user.id);
+        }
+        setIsDeleteModalOpen(false);
+        setDocToDelete(null);
+      } else {
+        alert('Failed to delete document');
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Delete failed. Please try again.');
     }
   };
+
 
   if (!isLoggedIn) {
     return (
@@ -193,7 +240,7 @@ const PersonalDetails: React.FC = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => removeDocument(doc.id, doc.category)}
+                        onClick={() => removeDocument(doc.id, doc.name)}
                         className="p-2 text-app-text-muted hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                         title="Delete"
                       >
@@ -241,6 +288,45 @@ const PersonalDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsDeleteModalOpen(false)}
+          />
+          <div className="relative bg-app-surface border border-app-border rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-xl text-app-text-muted hover:text-app-text hover:bg-app-surface-hover transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6">
+              <Trash2 className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-app-text mb-2">Delete Document?</h3>
+            <p className="text-app-text-muted mb-8 leading-relaxed">
+              Are you sure you want to delete <span className="text-app-text font-semibold">"{docToDelete?.name}"</span>? This action cannot be undone and the file will be permanently removed.
+            </p>
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 py-3.5 px-6 rounded-2xl bg-app-surface border border-app-border text-app-text font-bold hover:bg-app-surface-hover transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 py-3.5 px-6 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-500/25"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

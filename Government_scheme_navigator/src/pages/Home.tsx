@@ -1,8 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useInView } from 'motion/react';
 import { ArrowRight, Shield, Zap, Target, Users, BarChart3, Globe, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import translations from '../data/translations.json';
+
+const StatCounter: React.FC<{ value: string; label: string; index: number }> = ({ value, label, index }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, amount: 0.5 });
+
+  useEffect(() => {
+    if (isInView) {
+      // Extract numeric part and suffix
+      const numericValue = parseFloat(value.replace(/,/g, ''));
+      const duration = 5000; // 2 seconds
+      const steps = 60;
+      const increment = numericValue / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= numericValue) {
+          setCount(numericValue);
+          clearInterval(timer);
+        } else {
+          setCount(current);
+        }
+      }, duration / steps);
+      return () => clearInterval(timer);
+    }
+  }, [isInView, value]);
+
+  const formatValue = (num: number) => {
+    if (value.includes('.') && !value.includes(',')) {
+      return num.toFixed(1);
+    }
+    return Math.floor(num).toLocaleString();
+  };
+
+  const suffix = value.replace(/[0-9.,]/g, '');
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.8, delay: index * 0.1, ease: [0.21, 1.11, 0.81, 0.99] }}
+      className="text-center p-6 rounded-2xl bg-app-surface/40 border border-app-border/50 hover:border-cyan-500/30 transition-colors group"
+    >
+      <div className="text-4xl md:text-5xl font-bold text-app-text mb-2 tracking-tight">
+        {formatValue(count)}{suffix}
+      </div>
+      <div className="text-xs md:text-sm text-app-text-muted uppercase tracking-[0.2em] font-bold">{label}</div>
+    </motion.div>
+  );
+};
 
 const Home: React.FC = () => {
   const [lang, setLang] = useState('en');
@@ -110,10 +161,7 @@ const Home: React.FC = () => {
               { label: t.success_rate, value: "94%" },
               { label: t.states_covered, value: "28" }
             ].map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="text-3xl font-bold text-app-text mb-1">{stat.value}</div>
-                <div className="text-sm text-app-text-muted uppercase tracking-wider">{stat.label}</div>
-              </div>
+              <StatCounter key={i} index={i} label={stat.label} value={stat.value} />
             ))}
           </div>
         </div>

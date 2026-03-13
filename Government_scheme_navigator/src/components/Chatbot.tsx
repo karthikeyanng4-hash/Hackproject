@@ -67,15 +67,6 @@ const Chatbot: React.FC = () => {
     }
   };
 
-  const addAiMessage = (text: string, options?: string[]) => {
-    setIsTyping(true);
-    setTimeout(async () => {
-      setMessages(prev => [...prev, { role: 'ai', text, options }]);
-      await speak(text);
-      setIsTyping(false);
-    }, 1500);
-  };
-
   const speak = (text: string) => {
     return speakText(text, lang, isMuted);
   };
@@ -100,7 +91,7 @@ const Chatbot: React.FC = () => {
 
     const error = validateInput(currentState, messageText);
     if (error && currentState !== ChatState.SHOW_RESULTS) {
-      addAiMessage(t.chatbot[error] || error);
+      addAiMessage((t as any)[error] || error);
       return;
     }
 
@@ -111,11 +102,68 @@ const Chatbot: React.FC = () => {
       
       const response = await chatWithGemini(chatHistory);
       addAiMessage(response);
-      return;
+    } else {
+      processState(currentState, messageText);
     }
 
-    processState(currentState, messageText);
+    // Save chat to backend if user is logged in
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const user = JSON.parse(session);
+      if (user.id) {
+        try {
+          console.log('Saving user chat to database...', { userId: user.id, message: messageText });
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id, message: messageText, sender: 'user' }),
+          });
+          if (!response.ok) {
+            const data = await response.json();
+            console.warn('Failed to save user chat:', data.message);
+          }
+        } catch (err) {
+          console.error('Error saving user chat:', err);
+        }
+      } else {
+        console.warn('Cannot save chat: user.id missing from session', user);
+      }
+    }
   };
+
+  const addAiMessage = (text: string, options?: string[]) => {
+    setIsTyping(true);
+    setTimeout(async () => {
+      setMessages(prev => [...prev, { role: 'ai', text, options }]);
+      await speak(text);
+      setIsTyping(false);
+
+      // Save AI response if user is logged in
+      const session = localStorage.getItem('userSession');
+      if (session) {
+        const user = JSON.parse(session);
+        if (user.id) {
+          try {
+            console.log('Saving AI response to database...', { userId: user.id });
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: user.id, message: text, sender: 'bot' }),
+            });
+            if (!response.ok) {
+              const data = await response.json();
+              console.warn('Failed to save AI chat:', data.message);
+            }
+          } catch (err) {
+            console.error('Error saving AI response:', err);
+          }
+        }
+      }
+    }, 1500);
+  };
+
+
+
 
   const processState = (state: ChatState, input: string) => {
     switch (state) {

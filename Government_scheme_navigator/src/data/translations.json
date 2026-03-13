@@ -164,6 +164,22 @@
       "upload_doc": "Upload Document",
       "stored_docs": "Stored Documents",
       "login_required": "Please login to view and manage your personal documents."
+    },
+    "footer": {
+      "description": "Empowering citizens with intelligent government scheme discovery and eligibility analysis. Built with advanced AI to ensure no benefit goes unnoticed.",
+      "platform": "Platform",
+      "resources": "Resources",
+      "connect": "Connect",
+      "schemes": "Schemes",
+      "eligibility": "Eligibility Checker",
+      "assistant": "AI Assistant",
+      "dashboard": "Dashboard",
+      "how_it_works": "How it Works",
+      "privacy_policy": "Privacy Policy",
+      "terms_of_service": "Terms of Service",
+      "contact_us": "Contact Us",
+      "all_rights_reserved": "© 2026 GovAssist AI. All rights reserved.",
+      "made_with": "Made with ❤️ for Indian Citizens"
     }
   },
   "hi": {
@@ -331,6 +347,22 @@
       "in_review": "समीक्षा में",
       "save_changes": "परिवर्तन सहेजें",
       "cancel": "रद्द करें"
+    },
+    "footer": {
+      "description": "बुद्धिमान सरकारी योजना खोज और पात्रता विश्लेषण के साथ नागरिकों को सशक्त बनाना। यह सुनिश्चित करने के लिए उन्नत एआई के साथ बनाया गया है कि कोई भी लाभ किसी का ध्यान न जाए।",
+      "platform": "प्लेटफ़ॉर्म",
+      "resources": "संसाधन",
+      "connect": "जुड़ें",
+      "schemes": "योजनाएं",
+      "eligibility": "पात्रता जांच",
+      "assistant": "एआई सहायक",
+      "dashboard": "डैशबोर्ड",
+      "how_it_works": "यह कैसे काम करता है",
+      "privacy_policy": "गोपनीयता नीति",
+      "terms_of_service": "सेवा की शर्तें",
+      "contact_us": "संपर्क करें",
+      "all_rights_reserved": "© 2026 GovAssist AI. सर्वाधिकार सुरक्षित।",
+      "made_with": "भारतीय नागरिकों के लिए ❤️ के साथ बनाया गया"
     }
   },
   "ta": {
@@ -498,6 +530,22 @@
       "upload_doc": "ஆவணத்தைப் பதிவேற்றவும்",
       "stored_docs": "சேமிக்கப்பட்ட ஆவணங்கள்",
       "login_required": "உங்கள் தனிப்பட்ட ஆவணங்களைக் காணவும் நிர்வகிக்கவும் தயவுசெய்து உள்நுழையவும்."
+    },
+    "footer": {
+      "description": "அறிவார்ந்த அரசுத் திட்டத்தைக் கண்டறிதல் மற்றும் தகுதிப் பகுப்பாய்வு மூலம் குடிமக்களை மேம்படுத்துதல். எந்தவொரு நன்மையும் கவனிக்கப்படாமல் போவதை உறுதிசெய்ய மேம்பட்ட AI உடன் உருவாக்கப்பட்டது.",
+      "platform": "தளம்",
+      "resources": "ஆதாரங்கள்",
+      "connect": "இணையுங்கள்",
+      "schemes": "திட்டங்கள்",
+      "eligibility": "தகுதி சரிபார்ப்பு",
+      "assistant": "AI உதவியாளர்",
+      "dashboard": "டாஷ்போர்டு",
+      "how_it_works": "இது எப்படி வேலை செய்கிறது",
+      "privacy_policy": "தனியுரிமைக் கொள்கை",
+      "terms_of_service": "சேவை விதிமுறைகள்",
+      "contact_us": "எங்களைத் தொடர்பு கொள்ளுங்கள்",
+      "all_rights_reserved": "© 2026 GovAssist AI. அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.",
+      "made_with": "இந்திய குடிமக்களுக்காக ❤️ உடன் உருவாக்கப்பட்டது"
     }
   }
 }

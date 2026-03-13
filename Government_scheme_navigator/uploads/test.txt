@@ -1,0 +1,7 @@
+frontend : 
+
+npm run dev
+
+backend : 
+
+npx tsx server/index.ts

@@ -52,78 +52,94 @@ const Navbar: React.FC = () => {
 
   return (
     <nav 
-      className="fixed top-0 left-0 right-0 z-50 bg-app-surface/80 backdrop-blur-md border-b border-app-border"
+      className="fixed top-0 left-0 right-0 z-50 bg-app-surface/90 backdrop-blur-xl border-b border-app-border"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.5)]">
-                <Globe className="text-white w-5 h-5" />
+      <div className="max-w-[1600px] mx-auto px-6 lg:px-10">
+        <div className="flex items-center justify-between h-20">
+          {/* LEFT: Project Name / Logo */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center space-x-3 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300">
+                <Globe className="text-white w-6 h-6" />
               </div>
-              <span className="text-xl font-bold text-app-text tracking-tight">GovAssist <span className="text-cyan-400">AI</span></span>
+              <div className="flex flex-col">
+                <span className="text-xl font-extrabold text-app-text tracking-tighter leading-none">GovAssist</span>
+                <span className="text-sm font-bold text-cyan-400 tracking-[0.2em] uppercase">AI</span>
+              </div>
             </Link>
           </div>
 
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === item.path ? 'text-cyan-400 bg-app-bg/50' : 'text-app-text-muted hover:text-app-text hover:bg-app-surface-hover'
-                  }`}
+          {/* CENTER: Navigation & Global Controls (Single style pill) */}
+          <div className="hidden lg:flex flex-1 justify-center px-8">
+            <div className="flex items-center bg-app-bg/40 backdrop-blur-md border border-app-border rounded-2xl px-2 py-1.5 shadow-sm">
+              <div className="flex items-center space-x-1 pr-4 border-r border-app-border/50">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.path}
+                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                      location.pathname === item.path 
+                        ? 'text-cyan-400 bg-cyan-400/10' 
+                        : 'text-app-text-muted hover:text-app-text hover:bg-app-surface-hover'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="flex items-center space-x-3 pl-4">
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-xl bg-app-surface/50 text-app-text-muted hover:text-app-text hover:bg-app-surface border border-app-border transition-all hover:scale-105"
+                  aria-label="Toggle Theme"
                 >
-                  {item.name}
-                </Link>
-              ))}
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+
+                <div className="flex items-center space-x-1.5">
+                  {['en', 'hi', 'ta'].map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => changeLang(l)}
+                      className={`px-3 py-1.5 text-[10px] font-black tracking-widest rounded-lg border transition-all hover:scale-105 ${
+                        lang === l 
+                          ? 'bg-cyan-500 border-cyan-500 text-white shadow-md shadow-cyan-500/20' 
+                          : 'border-app-border text-app-text-muted hover:border-app-border-hover bg-app-surface/30'
+                      }`}
+                    >
+                      {l.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full bg-app-surface text-app-text-muted hover:text-app-text transition-all border border-app-border hover:border-app-border-hover"
-              aria-label="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-
-            <div className="flex items-center space-x-2 mr-4">
-              {['en', 'hi', 'ta'].map((l) => (
-                <button
-                  key={l}
-                  onClick={() => changeLang(l)}
-                  className={`px-2 py-1 text-xs rounded border transition-all ${
-                    lang === l ? 'bg-cyan-500 border-cyan-500 text-white' : 'border-app-border text-app-text-muted hover:border-app-border-hover'
-                  }`}
-                >
-                  {l.toUpperCase()}
-                </button>
-              ))}
-            </div>
-
+          {/* RIGHT: User & Logout */}
+          <div className="hidden lg:flex items-center space-x-4">
             {isLoggedIn ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-app-surface border border-app-border">
-                  <User className="w-4 h-4 text-cyan-400" />
-                  <span className="text-app-text text-sm font-medium">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 px-4 py-2 rounded-2xl bg-app-surface border border-app-border shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
+                    <User className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <span className="text-app-text text-sm font-bold truncate max-w-[120px]">
                     {JSON.parse(localStorage.getItem('userSession') || '{}').fullName || 'User'}
                   </span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-sm font-medium"
+                  className="group flex items-center space-x-2 px-6 py-2.5 rounded-2xl bg-red-500/5 text-red-400 border border-red-500/10 hover:bg-red-500/10 hover:border-red-500/30 transition-all text-sm font-bold shadow-sm"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                   <span>{t.logout}</span>
                 </button>
               </div>
             ) : (
               <Link
                 to="/login"
-                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-cyan-500 text-white hover:bg-cyan-400 transition-all text-sm font-medium shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                className="flex items-center space-x-2 px-8 py-3 rounded-2xl bg-cyan-500 text-white hover:bg-cyan-400 transition-all text-sm font-bold shadow-lg shadow-cyan-500/25 hover:scale-105 active:scale-95"
               >
                 <LogIn className="w-4 h-4" />
                 <span>{t.login}</span>
@@ -131,10 +147,10 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          <div className="md:hidden flex items-center">
+          <div className="lg:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-app-text-muted hover:text-app-text hover:bg-app-surface-hover focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-xl text-app-text-muted hover:text-app-text hover:bg-app-surface-hover focus:outline-none"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

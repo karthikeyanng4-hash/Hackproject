@@ -14,6 +14,7 @@ export enum ChatState {
 }
 
 export interface ChatMessage {
+  id?: number;
   role: "ai" | "user";
   text: string;
   options?: string[];

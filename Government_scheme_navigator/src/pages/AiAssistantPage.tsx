@@ -1,23 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Loader2, 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  VolumeX, 
-  CheckCircle2, 
-  ArrowRight, 
+import {
+  Send,
+  Bot,
+  User,
+  Loader2,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  CheckCircle2,
+  ArrowRight,
   ExternalLink,
   Sparkles,
   ArrowLeft,
   FileText,
   ShieldCheck,
-  X
+  X,
+  AlertCircle,
+  Edit2,
+  Copy,
+  Trash,
+  RotateCcw,
+  Check
 } from 'lucide-react';
+
 import { ChatState, ChatMessage, validateInput } from '../ai/aiAssistant';
 import { getRecommendations } from '../ai/recommendationEngine';
 import { chatWithGemini } from '../ai/GeminiService';
@@ -38,7 +45,9 @@ const AiAssistantPage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isMuted, setIsMuted] = useState(localStorage.getItem('chatMuted') === 'true');
   const [recommendations, setRecommendations] = useState<any[]>([]);
-  
+  const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState('');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
@@ -46,21 +55,27 @@ const AiAssistantPage: React.FC = () => {
   useEffect(() => {
     // Enable speech when assistant page is active
     setSpeechEnabled(true);
-    
+
     const savedLang = localStorage.getItem('appLang') || 'en';
     setLang(savedLang);
-    
+
     const handleLangChange = () => {
       const newLang = localStorage.getItem('appLang') || 'en';
       setLang(newLang);
     };
     window.addEventListener('languageChange', handleLangChange);
-    
+
     if (!startedRef.current) {
       startedRef.current = true;
-      startChat();
+      const session = localStorage.getItem('userSession');
+      if (session) {
+        const user = JSON.parse(session);
+        fetchChatHistory(user.id);
+      } else {
+        startChat();
+      }
     }
-    
+
     return () => {
       window.removeEventListener('languageChange', handleLangChange);
       // Disable speech when leaving assistant page
@@ -94,9 +109,56 @@ const AiAssistantPage: React.FC = () => {
     setMessages([{ role: 'ai', text: greeting }]);
     await speak(greeting);
     setIsTyping(false);
-    
+
     await new Promise(r => setTimeout(r, 500));
     checkLoginStatus();
+  };
+
+  const fetchChatHistory = async (userId: number) => {
+    try {
+      setIsTyping(true);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats/${userId}`);
+      if (response.ok) {
+        const history = await response.json();
+        if (history.length > 0) {
+          const formatted = history.map((h: any) => ({
+            id: h.id,
+            role: h.sender === 'bot' ? 'ai' : 'user',
+            text: h.message
+          }));
+          setMessages(formatted);
+          setCurrentState(ChatState.SHOW_RESULTS);
+        } else {
+          startChat();
+        }
+      } else {
+        startChat();
+      }
+    } catch (err) {
+      console.error('Error fetching history:', err);
+      startChat();
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const saveMessageToDb = async (text: string, role: 'ai' | 'user', tempId: number) => {
+    const session = localStorage.getItem('userSession');
+    if (!session) return;
+    try {
+      const user = JSON.parse(session);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, message: text, sender: role === 'ai' ? 'bot' : 'user' }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(prev => prev.map(m => (m as any).tempId === tempId ? { ...m, id: data.id } : m));
+      }
+    } catch (err) {
+      console.error('Error saving message:', err);
+    }
   };
 
   const checkLoginStatus = () => {
@@ -112,12 +174,75 @@ const AiAssistantPage: React.FC = () => {
 
   const addAiMessage = (text: string, options?: string[]) => {
     setIsTyping(true);
+    const tempId = Date.now() + Math.random();
     setTimeout(async () => {
-      setMessages(prev => [...prev, { role: 'ai', text, options }]);
+      setMessages(prev => [...prev, { role: 'ai', text, options, tempId } as any]);
       await speak(text);
       setIsTyping(false);
+      saveMessageToDb(text, 'ai', tempId);
     }, 1500);
   };
+
+  const handleRestartChat = async () => {
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const user = JSON.parse(session);
+      try {
+        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats/user/${user.id}`, {
+          method: 'DELETE',
+        });
+      } catch (err) {
+        console.error('Error resetting chat:', err);
+      }
+    }
+    setMessages([]);
+    setCurrentState(ChatState.START);
+    startedRef.current = false;
+    startChat();
+  };
+
+  const handleDeleteMessage = async (id?: number) => {
+    if (!id) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats/message/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        setMessages(prev => prev.filter(m => m.id !== id));
+      }
+    } catch (err) {
+      console.error('Delete message error:', err);
+    }
+  };
+
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // Visual feedback could be added here
+  };
+
+  const startEditing = (msg: ChatMessage) => {
+    if (msg.role === 'ai') return; // Only users can edit their messages
+    setEditingMessageId(msg.id || null);
+    setEditValue(msg.text);
+  };
+
+  const handleSaveEdit = async (id?: number) => {
+    if (!id || !editValue.trim()) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats/message/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: editValue }),
+      });
+      if (response.ok) {
+        setMessages(prev => prev.map(m => m.id === id ? { ...m, text: editValue } : m));
+        setEditingMessageId(null);
+      }
+    } catch (err) {
+      console.error('Update message error:', err);
+    }
+  };
+
 
   const speak = (text: string) => {
     return speakText(text, lang, isMuted);
@@ -147,7 +272,7 @@ const AiAssistantPage: React.FC = () => {
     } else {
       recognition.start();
       setIsListening(true);
-      
+
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         handleSend(transcript);
@@ -163,8 +288,26 @@ const AiAssistantPage: React.FC = () => {
     const messageText = textOverride || input;
     if (!messageText.trim()) return;
 
-    setMessages(prev => [...prev, { role: 'user', text: messageText }]);
+    const tempId = Date.now();
+    setMessages(prev => [...prev, { role: 'user', text: messageText, tempId } as any]);
     setInput('');
+    saveMessageToDb(messageText, 'user', tempId);
+
+    // Feature routing for special options
+    if (messageText === "Reset Chat" || messageText === "Restart Chat") {
+      handleRestartChat();
+      return;
+    }
+    
+    if (messageText === "How to apply?") {
+      if (recommendations.length > 0) {
+        handleApplyNow(recommendations[0]);
+      } else {
+        addAiMessage("I haven't found eligible schemes for you yet. Please complete the profile details first.");
+      }
+      return;
+    }
+
 
     if (showApplicationForm) {
       addAiMessage(`I'm helping you with the application for ${applyingScheme.name}. You can fill out the form on the right, or ask me specific questions about the documents required.`);
@@ -182,7 +325,7 @@ const AiAssistantPage: React.FC = () => {
       const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
       // Add the current message to history for the API call
       chatHistory.push({ role: 'user', content: messageText });
-      
+
       const response = await chatWithGemini(chatHistory);
       addAiMessage(response);
       return;
@@ -261,10 +404,10 @@ const AiAssistantPage: React.FC = () => {
     await new Promise(r => setTimeout(r, 2000));
     const recs = getRecommendations(profile);
     setRecommendations(recs);
-    
+
     localStorage.setItem('lastEligibilityResult', JSON.stringify({ profile, recommendations: recs }));
     window.dispatchEvent(new CustomEvent('eligibilityUpdated'));
-    
+
     const msg = (t.chatbot.analysis_complete || '').replace('{count}', recs.length.toString());
     addAiMessage(msg, ["How to apply?", "Reset Chat"]);
     setCurrentState(ChatState.SHOW_RESULTS);
@@ -310,7 +453,7 @@ const AiAssistantPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-bold text-app-text">Document Checklist</h3>
             </div>
-            
+
             <div className="space-y-3">
               {applyingScheme.documents_required.map((doc: string, i: number) => (
                 <div key={i} className="flex items-center space-x-3 p-3 bg-app-surface border border-app-border rounded-xl transition-colors">
@@ -356,7 +499,7 @@ const AiAssistantPage: React.FC = () => {
               </p>
             </div>
 
-            <button 
+            <button
               onClick={() => setCurrentStep(3)}
               className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-white rounded-2xl font-bold transition-all shadow-lg shadow-cyan-500/20"
             >
@@ -375,7 +518,7 @@ const AiAssistantPage: React.FC = () => {
             <div className="bg-app-bg border border-app-border rounded-2xl p-4 mb-8">
               <p className="text-sm text-app-text-muted transition-colors">Application ID: GOV-{Math.floor(100000 + Math.random() * 900000)}</p>
             </div>
-            <button 
+            <button
               onClick={handleBackToSchemes}
               className="px-6 py-3 bg-cyan-500 text-white rounded-xl font-bold text-sm hover:bg-cyan-400 transition-all shadow-lg"
             >
@@ -389,7 +532,7 @@ const AiAssistantPage: React.FC = () => {
             <AlertCircle className="w-16 h-16 text-app-text-muted/50 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-app-text mb-2 transition-colors">Login Required</h2>
             <p className="text-app-text-muted mb-8 transition-colors">Please sign in to view your personalized dashboard.</p>
-            <button 
+            <button
               onClick={() => window.location.href = '/login'}
               className="px-6 py-3 bg-cyan-500 text-white rounded-xl font-bold text-sm hover:bg-cyan-400 transition-all shadow-lg"
             >
@@ -420,11 +563,18 @@ const AiAssistantPage: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button 
+            <button
+              onClick={handleRestartChat}
+              className="group flex items-center space-x-2 px-4 py-2 rounded-xl bg-app-surface border border-app-border text-app-text-muted hover:text-cyan-400 hover:border-cyan-500/30 transition-all font-bold text-xs"
+              title="Restart Chat"
+            >
+              <RotateCcw className="w-4 h-4 group-hover:rotate-[-45deg] transition-transform" />
+              <span>Restart</span>
+            </button>
+            <button
               onClick={toggleMute}
-              className={`p-2 rounded-xl transition-all ${
-                isMuted ? 'bg-red-500/10 text-red-400' : 'bg-app-bg/5 text-app-text-muted hover:text-app-text'
-              }`}
+              className={`p-2 rounded-xl transition-all ${isMuted ? 'bg-red-500/10 text-red-400' : 'bg-app-bg/5 text-app-text-muted hover:text-app-text'
+                }`}
             >
               {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
@@ -433,37 +583,70 @@ const AiAssistantPage: React.FC = () => {
 
         <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
           {messages.map((msg, idx) => (
-            <motion.div 
-              key={idx} 
+            <motion.div
+              key={idx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start gap-3`}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                   msg.role === 'user' ? 'bg-app-bg text-app-text-muted' : 'bg-cyan-500 text-white'
-                }`}>
+              <div className={`group flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start gap-3`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-app-bg text-app-text-muted transition-colors' : 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
+                  }`}>
                   {msg.role === 'user' ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
                 </div>
-                <div className={`rounded-2xl px-5 py-3 text-sm leading-relaxed ${
-                  msg.role === 'user' 
-                    ? 'bg-cyan-500 text-white rounded-tr-none shadow-lg' 
+                <div className={`rounded-2xl px-5 py-3 text-sm leading-relaxed ${msg.role === 'user'
+                    ? 'bg-cyan-500 text-white rounded-tr-none shadow-lg'
                     : 'bg-app-bg text-app-text rounded-tl-none border border-app-border'
-                }`}>
-                  {msg.text}
-                  {msg.options && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {msg.options.map((opt, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSend(opt)}
-                          className="px-4 py-1.5 bg-app-surface hover:bg-app-surface-hover rounded-full text-xs font-medium transition-all border border-app-border text-app-text"
-                        >
-                          {opt}
+                  }`}>
+                  {editingMessageId === msg.id ? (
+                    <div className="flex flex-col space-y-3 min-w-[200px]">
+                      <textarea
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="w-full bg-black/20 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:border-white/40"
+                        rows={2}
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <button onClick={() => setEditingMessageId(null)} className="px-3 py-1 text-xs text-white/60 hover:text-white">Cancel</button>
+                        <button onClick={() => handleSaveEdit(msg.id)} className="px-3 py-1 bg-white text-cyan-600 rounded-lg text-xs font-bold flex items-center space-x-1">
+                          <Check className="w-3 h-3" />
+                          <span>Save</span>
                         </button>
-                      ))}
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      {msg.text}
+                      {msg.options && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {msg.options.map((opt, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleSend(opt)}
+                              className="px-4 py-1.5 bg-app-surface hover:bg-app-surface-hover rounded-full text-xs font-medium transition-all border border-app-border text-app-text"
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
+                  
+                  {/* Message Actions */}
+                  <div className={`mt-3 pt-3 border-t border-current/10 flex items-center space-x-3 transition-opacity ${editingMessageId === msg.id ? 'hidden' : 'opacity-0 group-hover:opacity-100'}`}>
+                    {msg.role === 'user' && (
+                      <button onClick={() => startEditing(msg)} className="p-1 hover:text-cyan-400 transition-colors" title="Edit">
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button onClick={() => handleDeleteMessage(msg.id)} className="p-1 hover:text-red-400 transition-colors" title="Delete">
+                      <Trash className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleCopyMessage(msg.text)} className="p-1 hover:text-emerald-400 transition-colors" title="Copy">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -507,9 +690,8 @@ const AiAssistantPage: React.FC = () => {
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-2">
               <button
                 onClick={toggleVoiceInput}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                  isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-app-surface text-app-text-muted hover:text-app-text'
-                }`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-app-surface text-app-text-muted hover:text-app-text'
+                  }`}
               >
                 {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
@@ -554,7 +736,7 @@ const AiAssistantPage: React.FC = () => {
                       className="bg-app-surface border border-app-border rounded-3xl p-6 hover:border-cyan-500/30 transition-all group relative overflow-hidden"
                     >
                       <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 -mr-16 -mt-16 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all"></div>
-                      
+
                       <div className="flex items-center justify-between mb-4">
                         <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] font-bold uppercase tracking-widest border border-cyan-500/20">
                           {scheme.category}
@@ -569,14 +751,14 @@ const AiAssistantPage: React.FC = () => {
                       <p className="text-app-text-muted text-sm mb-6 leading-relaxed">{scheme.description}</p>
 
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <button 
+                        <button
                           onClick={() => handleApplyNow(scheme)}
                           className="flex-1 px-6 py-3 bg-cyan-500 text-white rounded-xl font-bold text-sm hover:bg-cyan-400 transition-all shadow-lg flex items-center justify-center space-x-2"
                         >
                           <span>Apply Now</span>
                           <ArrowRight className="w-4 h-4" />
                         </button>
-                        <a 
+                        <a
                           href={scheme.application_link}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -624,7 +806,7 @@ const AiAssistantPage: React.FC = () => {
                     <span className="text-xs text-cyan-400 font-bold">Step {currentStep} of 4</span>
                   </div>
                   <div className="w-full h-1.5 bg-app-bg rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] transition-all duration-500"
                       style={{ width: `${(currentStep / 4) * 100}%` }}
                     ></div>
@@ -637,7 +819,7 @@ const AiAssistantPage: React.FC = () => {
 
                   {currentStep < 4 && (
                     <div className="pt-6">
-                      <button 
+                      <button
                         onClick={handleNextStep}
                         className="w-full py-4 bg-cyan-500 text-white rounded-2xl font-bold hover:bg-cyan-400 transition-all shadow-lg flex items-center justify-center space-x-2"
                       >

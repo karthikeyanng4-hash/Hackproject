@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Globe, Twitter, Facebook, Instagram, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import translations from '../data/translations.json';
 
 const Footer: React.FC = () => {
+  const [lang, setLang] = useState(localStorage.getItem('appLang') || 'en');
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setLang(localStorage.getItem('appLang') || 'en');
+    };
+
+    window.addEventListener('languageChange', handleLanguageChange);
+    return () => {
+      window.removeEventListener('languageChange', handleLanguageChange);
+    };
+  }, []);
+
+  const t = (translations as any)[lang].footer;
+
   return (
     <footer className="bg-app-bg border-t border-app-border pt-16 pb-8 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -15,32 +31,32 @@ const Footer: React.FC = () => {
               <span className="text-xl font-bold text-app-text tracking-tight">GovAssist <span className="text-cyan-400">AI</span></span>
             </div>
             <p className="text-app-text-muted text-sm leading-relaxed">
-              Empowering citizens with intelligent government scheme discovery and eligibility analysis. Built with advanced AI to ensure no benefit goes unnoticed.
+              {t.description}
             </p>
           </div>
           
           <div>
-            <h3 className="text-app-text font-semibold mb-6">Platform</h3>
+            <h3 className="text-app-text font-semibold mb-6">{t.platform}</h3>
             <ul className="space-y-4">
-              <li><Link to="/schemes" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">Schemes</Link></li>
-              <li><Link to="/eligibility" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">Eligibility Checker</Link></li>
-              <li><Link to="/assistant" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">AI Assistant</Link></li>
-              <li><Link to="/dashboard" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">Dashboard</Link></li>
+              <li><Link to="/schemes" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.schemes}</Link></li>
+              <li><Link to="/eligibility" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.eligibility}</Link></li>
+              <li><Link to="/assistant" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.assistant}</Link></li>
+              <li><Link to="/dashboard" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.dashboard}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-app-text font-semibold mb-6">Resources</h3>
+            <h3 className="text-app-text font-semibold mb-6">{t.resources}</h3>
             <ul className="space-y-4">
-              <li><Link to="/about" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">How it Works</Link></li>
-              <li><a href="#" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">Terms of Service</a></li>
-              <li><Link to="/about" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">Contact Us</Link></li>
+              <li><Link to="/about" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.how_it_works}</Link></li>
+              <li><a href="#" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.privacy_policy}</a></li>
+              <li><a href="#" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.terms_of_service}</a></li>
+              <li><Link to="/about" className="text-app-text-muted hover:text-cyan-400 text-sm transition-colors">{t.contact_us}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-app-text font-semibold mb-6">Connect</h3>
+            <h3 className="text-app-text font-semibold mb-6">{t.connect}</h3>
             <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 rounded-full bg-app-surface flex items-center justify-center text-app-text-muted hover:bg-cyan-500 hover:text-white transition-all border border-app-border">
                 <Twitter className="w-5 h-5" />
@@ -60,10 +76,10 @@ const Footer: React.FC = () => {
         
         <div className="pt-8 border-t border-app-border flex flex-col md:flex-row justify-between items-center">
           <p className="text-app-text-muted text-xs mb-4 md:mb-0">
-            © 2026 GovAssist AI. All rights reserved.
+            {t.all_rights_reserved}
           </p>
           <div className="flex space-x-6">
-            <span className="text-app-text-muted text-xs">Made with ❤️ for Indian Citizens</span>
+            <span className="text-app-text-muted text-xs">{t.made_with}</span>
           </div>
         </div>
       </div>

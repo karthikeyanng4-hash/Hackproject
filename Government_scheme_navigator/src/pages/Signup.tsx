@@ -31,7 +31,7 @@ const Signup: React.FC = () => {
   useEffect(() => {
     const savedLang = localStorage.getItem('appLang') || 'en';
     setLang(savedLang);
-    
+
     const handleLangChange = () => {
       setLang(localStorage.getItem('appLang') || 'en');
     };
@@ -54,34 +54,38 @@ const Signup: React.FC = () => {
 
     const age = calculateAge(formData.dob);
 
-    // Simulate API call
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      if (users.find((u: any) => u.email === formData.email)) {
-        setError('Email already registered.');
+    // Real API call
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          fullName: formData.name, // Ensure consistency with backend expectations if needed
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('userSession', JSON.stringify({
+          ...data.user,
+          token: data.token,
+          loginStatus: true
+        }));
+        navigate('/dashboard');
+      } else {
+        setError(data.message || 'Signup failed. Please try again.');
         setIsLoading(false);
-        return;
       }
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError('Connection failed. Please check if the server is running.');
+      setIsLoading(false);
+    }
 
-      const newUser = {
-        ...formData,
-        fullName: formData.name,
-        age,
-        income: parseInt(formData.income),
-        category: 'General'
-      };
-
-      users.push(newUser);
-      localStorage.setItem('registeredUsers', JSON.stringify(users));
-      
-      // Auto login
-      localStorage.setItem('userSession', JSON.stringify({
-        ...newUser,
-        loginStatus: true
-      }));
-      
-      navigate('/dashboard');
-    }, 1500);
   };
 
   return (
@@ -115,7 +119,7 @@ const Signup: React.FC = () => {
               {/* Basic Info */}
               <div className="space-y-4">
                 <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest border-b border-app-border pb-2">Personal Information</h3>
-                
+
                 <div>
                   <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.full_name}</label>
                   <div className="relative">
@@ -158,7 +162,7 @@ const Signup: React.FC = () => {
               {/* Contact & Location */}
               <div className="space-y-4">
                 <h3 className="text-cyan-400 text-xs font-bold uppercase tracking-widest border-b border-app-border pb-2">Contact & Location</h3>
-                
+
                 <div>
                   <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">{t.auth.email}</label>
                   <div className="relative">

@@ -20,7 +20,7 @@ const Login: React.FC = () => {
 
     const savedLang = localStorage.getItem('appLang') || 'en';
     setLang(savedLang);
-    
+
     const handleLangChange = () => {
       setLang(localStorage.getItem('appLang') || 'en');
     };
@@ -35,22 +35,35 @@ const Login: React.FC = () => {
     setIsLoading(true);
     setError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const user = users.find((u: any) => u.email === email && u.password === password);
+    // Real API call
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (user) {
+      const data = await response.json();
+
+      if (response.ok) {
         localStorage.setItem('userSession', JSON.stringify({
-          ...user,
+          ...data.user,
+          token: data.token,
           loginStatus: true
         }));
         navigate('/dashboard');
       } else {
-        setError('Invalid email or password. Please try again.');
+        setError(data.message || 'Invalid email or password. Please try again.');
         setIsLoading(false);
       }
-    }, 1500);
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Connection failed. Please check if the server is running.');
+      setIsLoading(false);
+    }
+
   };
 
   return (

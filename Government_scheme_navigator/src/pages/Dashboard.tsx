@@ -53,17 +53,28 @@ const Dashboard: React.FC = () => {
     const loadResults = () => {
       const results = localStorage.getItem('lastEligibilityResult');
       if (results) {
-        setEligibilityResult(JSON.parse(results));
+        try {
+          setEligibilityResult(JSON.parse(results));
+        } catch (e) {
+          console.error('Error parsing eligibility results:', e);
+        }
       }
     };
 
-    const loadSavedSchemes = () => {
+
+    const loadSavedSchemes = async () => {
       const session = localStorage.getItem('userSession');
       if (session) {
         const userData = JSON.parse(session);
-        const savedKey = `savedSchemes_${userData.email}`;
-        const saved = JSON.parse(localStorage.getItem(savedKey) || '[]');
-        setSavedSchemes(saved);
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schemes/saved/${userData.id}`);
+          const data = await response.json();
+          if (response.ok) {
+            setSavedSchemes(data);
+          }
+        } catch (err) {
+          console.error('Error fetching saved schemes:', err);
+        }
       }
     };
 
@@ -79,15 +90,24 @@ const Dashboard: React.FC = () => {
     };
   }, []);
 
-  const handleUnsave = (schemeId: string) => {
+  const handleUnsave = async (schemeId: string) => {
     if (!user) return;
-    const savedKey = `savedSchemes_${user.email}`;
-    const saved = JSON.parse(localStorage.getItem(savedKey) || '[]');
-    const updated = saved.filter((s: any) => s.id !== schemeId);
-    localStorage.setItem(savedKey, JSON.stringify(updated));
-    setSavedSchemes(updated);
-    window.dispatchEvent(new Event('storage'));
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schemes/unsave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, schemeId }),
+      });
+
+      if (response.ok) {
+        setSavedSchemes(prev => prev.filter(s => s.id !== schemeId));
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch (err) {
+      console.error('Error unsaving scheme:', err);
+    }
   };
+
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -398,11 +418,12 @@ const Dashboard: React.FC = () => {
                     <div className="flex-1">
                       <div className="text-sm font-bold text-app-text mb-1 group-hover:text-cyan-400 transition-colors">{app.name}</div>
                       <div className="flex items-center space-x-2">
-                        <span className={`w-2 h-2 rounded-full ${app.status === 'Applied' ? 'bg-emerald-500' : 'bg-cyan-500'}`}></span>
+                        <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
                         <span className="text-[10px] text-app-text-muted uppercase tracking-wider font-bold">
-                          {app.status === 'Applied' ? t.dashboard.applied : (app.status === 'Saved' ? (lang === 'hi' ? 'सहेजा गया' : lang === 'ta' ? 'சேமிக்கப்பட்டது' : 'Saved') : t.dashboard.in_review)} • {app.date}
+                          {(lang === 'hi' ? 'सहेजा गया' : lang === 'ta' ? 'சேமிக்கப்பட்டது' : 'Saved')} • {app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Recent'}
                         </span>
                       </div>
+
                     </div>
                     <div className="flex items-center space-x-2">
                       <Link 

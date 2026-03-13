@@ -31,7 +31,28 @@ const Schemes: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [filteredSchemes, setFilteredSchemes] = useState(schemesData);
+  const [filteredSchemes, setFilteredSchemes] = useState<any[]>([]);
+  const [allSchemes, setAllSchemes] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchSchemes = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schemes`);
+        const data = await response.json();
+        if (response.ok) {
+          setAllSchemes(data);
+          setFilteredSchemes(data);
+        }
+      } catch (err) {
+        console.error('Error fetching schemes:', err);
+        // Fallback to static data if API fails
+        setAllSchemes(schemesData);
+        setFilteredSchemes(schemesData);
+      }
+    };
+    fetchSchemes();
+  }, []);
+
   const [lang, setLang] = useState('en');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchParams] = useSearchParams();
@@ -74,20 +95,29 @@ const Schemes: React.FC = () => {
 
   // Check if current scheme is saved
   useEffect(() => {
-    if (selectedScheme) {
-      const session = localStorage.getItem('userSession');
-      if (session) {
-        const user = JSON.parse(session);
-        const savedKey = `savedSchemes_${user.email}`;
-        const saved = JSON.parse(localStorage.getItem(savedKey) || '[]');
-        setIsSaved(saved.some((s: any) => s.id === selectedScheme.id));
-      } else {
-        setIsSaved(false);
+    const checkSavedStatus = async () => {
+      if (selectedScheme) {
+        const session = localStorage.getItem('userSession');
+        if (session) {
+          const user = JSON.parse(session);
+          try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schemes/saved/${user.id}`);
+            const data = await response.json();
+            if (response.ok) {
+              setIsSaved(data.some((s: any) => s.id === selectedScheme.id));
+            }
+          } catch (err) {
+            console.error('Error checking saved status:', err);
+          }
+        } else {
+          setIsSaved(false);
+        }
       }
-    }
+    };
+    checkSavedStatus();
   }, [selectedScheme]);
 
-  const handleSaveForLater = () => {
+  const handleSaveForLater = async () => {
     const session = localStorage.getItem('userSession');
     if (!session) {
       alert(lang === 'hi' ? 'योजनाओं को सहेजने के लिए कृपया लॉगिन करें।' : lang === 'ta' ? 'திட்டங்களைச் சேமிக்க தயவுசெய்து உள்நுழையவும்.' : 'Please login to save schemes.');
@@ -96,28 +126,26 @@ const Schemes: React.FC = () => {
     }
 
     const user = JSON.parse(session);
-    const savedKey = `savedSchemes_${user.email}`;
-    const saved = JSON.parse(localStorage.getItem(savedKey) || '[]');
+    const url = isSaved 
+      ? `${import.meta.env.VITE_API_BASE_URL}/api/schemes/unsave`
+      : `${import.meta.env.VITE_API_BASE_URL}/api/schemes/save`;
 
-    if (isSaved) {
-      const updated = saved.filter((s: any) => s.id !== selectedScheme.id);
-      localStorage.setItem(savedKey, JSON.stringify(updated));
-      setIsSaved(false);
-    } else {
-      const newSavedScheme = {
-        ...selectedScheme,
-        status: 'Saved',
-        date: new Date().toISOString().split('T')[0]
-      };
-      const updated = [...saved, newSavedScheme];
-      localStorage.setItem(savedKey, JSON.stringify(updated));
-      setIsSaved(true);
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, schemeId: selectedScheme.id }),
+      });
+
+      if (response.ok) {
+        setIsSaved(!isSaved);
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch (err) {
+      console.error('Error updating saved scheme:', err);
     }
-    
-    // Alert the user
-    // alert(isSaved ? 'Scheme removed from saved list.' : 'Scheme saved to your dashboard!');
-    window.dispatchEvent(new Event('storage'));
   };
+
 
   const stopSpeaking = useCallback(() => {
     globalStopSpeaking();
@@ -149,33 +177,36 @@ const Schemes: React.FC = () => {
   const categories = ['All', ...new Set(schemesData.map(s => s.category))];
 
   useEffect(() => {
-    let filtered = schemesData;
+    let filtered = allSchemes.length > 0 ? allSchemes : schemesData;
     
     // Apply URL Filter (Eligible/Trending)
     const filterType = searchParams.get('filter');
     if (filterType === 'eligible') {
       const results = localStorage.getItem('lastEligibilityResult');
       if (results) {
-        const eligibleSchemes = JSON.parse(results).recommendations || [];
-        const eligibleIds = eligibleSchemes.map((s: any) => s.id);
-        filtered = filtered.filter(s => eligibleIds.includes(s.id));
+        try {
+          const eligibleSchemes = JSON.parse(results).recommendations || [];
+          const eligibleIds = eligibleSchemes.map((s: any) => s.id);
+          filtered = filtered.filter(s => eligibleIds.includes(s.id));
+        } catch (e) {
+          console.error('Error parsing eligibility results:', e);
+        }
       } else {
         filtered = []; // No results found
       }
     } else if (filterType === 'trending') {
-      // For demonstration, let's say the first 12 schemes are trending
-      // Or we can pick specific ones. Let's just take a slice for now.
       filtered = filtered.slice(0, 12);
     }
 
     // Apply Search and Category Filter
     filtered = filtered.filter(scheme => 
-      (scheme.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       scheme.description.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (scheme.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       scheme.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedCategory === 'All' || scheme.category === selectedCategory)
     );
     setFilteredSchemes(filtered);
-  }, [searchTerm, selectedCategory, searchParams]);
+  }, [searchTerm, selectedCategory, searchParams, allSchemes]);
+
 
   const toggleVoiceSearch = () => {
     if (!('webkitSpeechRecognition' in window)) {
@@ -294,7 +325,8 @@ const Schemes: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2 text-[10px] text-app-text-muted uppercase tracking-wider font-bold">
                 <IndianRupee className="w-3 h-3 text-emerald-500" />
-                <span>{t.schemes.limit}: ₹{scheme.income_limit.toLocaleString()}</span>
+                <span>{t.schemes.limit}: ₹{(scheme.income_limit || 0).toLocaleString()}</span>
+
               </div>
             </div>
           </motion.div>
@@ -372,7 +404,8 @@ const Schemes: React.FC = () => {
                         </li>
                         <li className="flex items-center justify-between text-sm">
                           <span className="text-app-text-muted">{t.schemes.income_limit}</span>
-                          <span className="text-app-text font-medium">Up to ₹{selectedScheme.income_limit.toLocaleString()} / Year</span>
+                          <span className="text-app-text font-medium">Up to ₹{(selectedScheme.income_limit || 0).toLocaleString()} / Year</span>
+
                         </li>
                         <li className="flex items-center justify-between text-sm">
                           <span className="text-app-text-muted">{t.schemes.occupation}</span>
@@ -409,11 +442,12 @@ const Schemes: React.FC = () => {
                         <span>{t.schemes.required_documents}</span>
                       </h4>
                       <div className="flex flex-wrap gap-2">
-                        {selectedScheme.documents_required.map((doc: string, i: number) => (
+                        {(Array.isArray(selectedScheme.documents_required) ? selectedScheme.documents_required : []).map((doc: string, i: number) => (
                           <span key={i} className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-lg border border-emerald-500/20">
                             {doc}
                           </span>
                         ))}
+
                       </div>
                     </div>
                   </div>
