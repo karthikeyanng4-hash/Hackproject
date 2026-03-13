@@ -1,0 +1,5 @@
+{
+  "name": "GovAssist AI",
+  "description": "AI-powered Government Scheme Discovery and Eligibility Platform for citizens to find and apply for welfare benefits.",
+  "requestFramePermissions": ["microphone"]
+}
