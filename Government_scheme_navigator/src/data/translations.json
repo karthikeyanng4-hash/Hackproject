@@ -120,6 +120,10 @@
       "typing": "AI is typing...",
       "invalid_age": "I need your age as a number to continue (example: 23).",
       "invalid_income": "Please enter your annual income as a number (example: 500000).",
+      "invalid_name": "Please enter a valid name (letters only).",
+      "invalid_occupation": "Please enter a valid occupation from the list (e.g., Farmer, Student, Entrepreneur, Small Business).",
+      "invalid_gender": "Please choose your gender from the provided options (Male, Female, or Other).",
+      "invalid_education": "Please enter a valid education level (example: Graduate).",
       "processing": "Processing your eligibility...",
       "ask_name": "What is your full name (as per official ID)?",
       "ask_gender": "What is your gender?",
@@ -134,6 +138,8 @@
       "ask_education": "What is your highest education level?",
       "analysis_complete": "Analysis complete! I found {count} schemes you are eligible for. You can see them on the right side of your screen.",
       "apply_help": "Excellent choice! I've opened the application portal for **{name}** on the right side. I'll guide you through each step. First, please review the required documents listed there.",
+      "ask_phone_app": "Great! Documents uploaded. Now please provide your 10-digit mobile number to proceed with the application.",
+      "invalid_phone": "Please enter a valid 10-digit mobile number.",
       "input_placeholder": "Ask me anything about government schemes..."
     },
     "eligibility": {
@@ -270,6 +276,10 @@
       "typing": "एआई टाइप कर रहा है...",
       "invalid_age": "जारी रखने के लिए मुझे आपकी आयु एक संख्या के रूप में चाहिए (उदाहरण: 23)।",
       "invalid_income": "कृपया अपनी वार्षिक आय एक संख्या के रूप में दर्ज करें (उदाहरण: 500000)।",
+      "invalid_name": "कृपया एक वैध नाम दर्ज करें (केवल अक्षर)।",
+      "invalid_occupation": "कृपया सूची से एक वैध व्यवसाय दर्ज करें (जैसे: किसान, छात्र, उद्यमी, छोटा व्यवसाय)।",
+      "invalid_gender": "कृपया दिए गए विकल्पों (पुरुष, महिला, या अन्य) में से अपना लिंग चुनें।",
+      "invalid_education": "कृपया एक वैध शिक्षा स्तर दर्ज करें (उदाहरण: स्नातक)।",
       "processing": "आपकी पात्रता की प्रक्रिया की जा रही है...",
       "input_placeholder": "सरकारी योजनाओं के बारे में कुछ भी पूछें...",
       "ask_name": "आपका पूरा नाम क्या है (आधिकारिक आईडी के अनुसार)?",
@@ -284,7 +294,9 @@
       "ask_occupation": "आपका व्यवसाय क्या है?",
       "ask_education": "आपका उच्चतम शिक्षा स्तर क्या है?",
       "analysis_complete": "विश्लेषण पूरा हुआ! मुझे {count} योजनाएं मिलीं जिनके लिए आप पात्र हैं। आप उन्हें अपनी स्क्रीन के दाईं ओर देख सकते हैं।",
-      "apply_help": "बेहतरीन विकल्प! मैंने दाईं ओर **{name}** के लिए आवेदन पोर्टल खोल दिया है। मैं हर कदम पर आपका मार्गदर्शन करूंगा। सबसे पहले, कृपया वहां सूचीबद्ध आवश्यक दस्तावेजों की समीक्षा करें।"
+      "apply_help": "बेहतरीन विकल्प! मैंने दाईं ओर **{name}** के लिए आवेदन पोर्टल खोल दिया है। मैं हर कदम पर आपका मार्गदर्शन करूंगा। सबसे पहले, कृपया वहां सूचीबद्ध आवश्यक दस्तावेजों की समीक्षा करें।",
+      "ask_phone_app": "बहुत बढ़िया! दस्तावेज़ अपलोड हो गए। अब आवेदन के साथ आगे बढ़ने के लिए कृपया अपना 10 अंकों का मोबाइल नंबर प्रदान करें।",
+      "invalid_phone": "कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें।"
     },
     "eligibility": {
       "title": "पात्रता जांच",
@@ -486,6 +498,10 @@
       "typing": "AI தட்டச்சு செய்கிறது...",
       "invalid_age": "தொடர உங்கள் வயது எண்ணாக இருக்க வேண்டும் (உதாரணம்: 23).",
       "invalid_income": "உங்கள் ஆண்டு வருமானத்தை எண்ணாக உள்ளிடவும் (உதாரணம்: 500000).",
+      "invalid_name": "தயவுசெய்து சரியான பெயரை உள்ளிடவும் (எழுத்துக்கள் மட்டும்).",
+      "invalid_occupation": "பட்டியலிலிருந்து சரியான தொழிலை உள்ளிடவும் (எ.கா., விவசாயி, மாணவர், தொழிலதிபர், சிறு வணிகம்).",
+      "invalid_gender": "வழங்கப்பட்ட விருப்பங்களிலிருந்து (ஆண், பெண், அல்லது மற்றவை) உங்கள் பாலினத்தைத் தேர்ந்தெடுக்கவும்.",
+      "invalid_education": "தயவுசெய்து சரியான கல்வி நிலையை உள்ளிடவும் (உதாரணம்: பட்டதாரி).",
       "processing": "உங்கள் தகுதி சரிபார்க்கப்படுகிறது...",
       "input_placeholder": "அரசுத் திட்டங்களைப் பற்றி எதையும் கேளுங்கள்...",
       "ask_name": "உங்கள் முழுப் பெயர் என்ன (அதிகாரப்பூர்வ ஐடி படி)?",
@@ -500,7 +516,9 @@
       "ask_occupation": "உங்கள் தொழில் என்ன?",
       "ask_education": "உங்கள் உயர்ந்த கல்வி நிலை என்ன?",
       "analysis_complete": "பகுப்பாய்வு முடிந்தது! நீங்கள் தகுதியுள்ள {count} திட்டங்களை நான் கண்டறிந்துள்ளேன். உங்கள் திரையின் வலது பக்கத்தில் அவற்றைக் காணலாம்.",
-      "apply_help": "சிறந்த தேர்வு! வலது பக்கத்தில் **{name}** க்கான விண்ணப்ப போர்ட்டலைத் திறந்துள்ளேன். ஒவ்வொரு அடியிலும் நான் உங்களுக்கு வழிகாட்டுவேன். முதலில், அங்கு பட்டியலிடப்பட்டுள்ள தேவையான ஆவணங்களை மதிப்பாய்வு செய்யவும்."
+      "apply_help": "சிறந்த தேர்வு! வலது பக்கத்தில் **{name}** க்கான விண்ணப்ப போர்ட்டலைத் திறந்துள்ளேன். ஒவ்வொரு அடியிலும் நான் உங்களுக்கு வழிகாட்டுவேன். முதலில், அங்கு பட்டியலிடப்பட்டுள்ள தேவையான ஆவணங்களை மதிப்பாய்வு செய்யவும்.",
+      "ask_phone_app": "சிறந்த! ஆவணங்கள் பதிவேற்றப்பட்டன. இப்போது விண்ணப்பத்தைத் தொடர உங்கள் 10-இலக்க மொபைல் எண்ணை வழங்கவும்.",
+      "invalid_phone": "தயவுசெய்து சரியான 10-இலக்க மொபைல் எண்ணை உள்ளிடவும்."
     },
     "eligibility": {
       "title": "தகுதி சரிபார்ப்பு",

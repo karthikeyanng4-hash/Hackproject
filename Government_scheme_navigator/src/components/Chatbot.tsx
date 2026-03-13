@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, User, Bot, Send, X, MessageSquare, Loader2, Volume2, VolumeX, Mic, MicOff, Sparkles, ArrowRight, ExternalLink, CheckCircle2, Maximize2, Minimize2 } from 'lucide-react';
-import { ChatState, ChatMessage, validateInput } from '../ai/aiAssistant';
+import { ChatState, ChatMessage, validateInput, VALID_OCCUPATIONS } from '../ai/aiAssistant';
 import { getRecommendations } from '../ai/recommendationEngine';
 import { chatWithGemini } from '../ai/GeminiService';
 import translations from '../data/translations.json';
@@ -100,10 +100,30 @@ const Chatbot: React.FC = () => {
       const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
       chatHistory.push({ role: 'user', content: messageText });
       
-      const response = await chatWithGemini(chatHistory);
+      const response = await chatWithGemini(chatHistory, lang);
       addAiMessage(response);
     } else {
-      processState(currentState, messageText);
+      // If it looks like a question during onboarding, let Gemini handle it
+      const isProbablyQuestion = messageText.includes('?') || 
+                                 messageText.length > 20 || 
+                                 ['why', 'how', 'what', 'who', 'where', 'can you'].some(word => messageText.toLowerCase().includes(word));
+      
+      if (isProbablyQuestion) {
+        setIsTyping(true);
+        const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
+        chatHistory.push({ role: 'user', content: messageText });
+        
+        // Add context for onboarding question
+        chatHistory.push({ 
+          role: 'system', 
+          content: `The user is currently being asked for their ${currentState.replace('ASK_', '').toLowerCase()}. They asked: "${messageText}". Answer their question and then guide them back to providing the requested info.` 
+        });
+
+        const response = await chatWithGemini(chatHistory, lang);
+        addAiMessage(response);
+      } else {
+        processState(currentState, messageText);
+      }
     }
 
     // Save chat to backend if user is logged in
@@ -199,13 +219,19 @@ const Chatbot: React.FC = () => {
 
       case ChatState.ASK_NAME:
         setUserProfile({ ...userProfile, name: input });
-        addAiMessage(`Nice to meet you, ${input}! How old are you?`);
+        addAiMessage(`Nice to meet you, ${input}! What is your gender?`, ["Male", "Female", "Other"]);
+        setCurrentState(ChatState.ASK_GENDER);
+        break;
+
+      case ChatState.ASK_GENDER:
+        setUserProfile({ ...userProfile, gender: input });
+        addAiMessage("How old are you?");
         setCurrentState(ChatState.ASK_AGE);
         break;
 
       case ChatState.ASK_AGE:
         setUserProfile({ ...userProfile, age: parseInt(input) });
-        addAiMessage("What is your occupation? (e.g., Farmer, Student, Entrepreneur)");
+        addAiMessage("What is your occupation?", VALID_OCCUPATIONS);
         setCurrentState(ChatState.ASK_OCCUPATION);
         break;
 

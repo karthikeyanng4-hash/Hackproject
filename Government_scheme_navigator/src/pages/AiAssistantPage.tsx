@@ -22,10 +22,13 @@ import {
   Copy,
   Trash,
   RotateCcw,
-  Check
+  Check,
+  Upload,
+  Paperclip,
+  Clock
 } from 'lucide-react';
 
-import { ChatState, ChatMessage, validateInput } from '../ai/aiAssistant';
+import { ChatState, ChatMessage, validateInput, VALID_OCCUPATIONS } from '../ai/aiAssistant';
 import { getRecommendations } from '../ai/recommendationEngine';
 import { chatWithGemini } from '../ai/GeminiService';
 import translations from '../data/translations.json';
@@ -47,9 +50,15 @@ const AiAssistantPage: React.FC = () => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: File | null }>({});
+  const [isUploading, setIsUploading] = useState<string | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [profileDocs, setProfileDocs] = useState<any[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -243,6 +252,18 @@ const AiAssistantPage: React.FC = () => {
     }
   };
 
+  const handlePhoneNumberChange = (val: string) => {
+    // Only allow numbers and max 10 digits
+    const cleaned = val.replace(/\D/g, '').slice(0, 10);
+    setPhoneNumber(cleaned);
+
+    if (cleaned.length > 0 && cleaned.length < 10) {
+      setPhoneError('Mobile number must be exactly 10 digits');
+    } else {
+      setPhoneError('');
+    }
+  };
+
 
   const speak = (text: string) => {
     return speakText(text, lang, isMuted);
@@ -293,6 +314,8 @@ const AiAssistantPage: React.FC = () => {
     setInput('');
     saveMessageToDb(messageText, 'user', tempId);
 
+    const error = validateInput(currentState, messageText);
+    
     // Feature routing for special options
     if (messageText === "Reset Chat" || messageText === "Restart Chat") {
       handleRestartChat();
@@ -308,26 +331,76 @@ const AiAssistantPage: React.FC = () => {
       return;
     }
 
+    // Handle Phone Validation for Application - THIS MUST BE BEFORE GEMINI INTERCEPT
+    if (currentState === ChatState.ASK_PHONE_APP) {
+      const cleanedPhone = messageText.replace(/\D/g, '').slice(0, 10);
+      const phoneErrorKey = validateInput(ChatState.ASK_PHONE_APP, cleanedPhone);
+      
+      if (phoneErrorKey) {
+        addAiMessage(t.chatbot[phoneErrorKey] || phoneErrorKey);
+        return;
+      }
+      
+      setPhoneNumber(cleanedPhone);
+      setPhoneError(''); // Clear any existing validation errors
+      addAiMessage("Perfect! I've updated your application form with your mobile number. You can now proceed to the next step.");
+      
+      // Automatically advance to Step 2
+      setTimeout(() => {
+        handleNextStep();
+      }, 2000);
+      
+      setCurrentState(ChatState.SHOW_RESULTS);
+      return;
+    }
 
     if (showApplicationForm) {
-      addAiMessage(`I'm helping you with the application for ${applyingScheme.name}. You can fill out the form on the right, or ask me specific questions about the documents required.`);
-      return;
-    }
-
-    const error = validateInput(currentState, messageText);
-    if (error && currentState !== ChatState.SHOW_RESULTS) {
-      addAiMessage(t.chatbot[error] || error);
-      return;
-    }
-
-    if (currentState === ChatState.SHOW_RESULTS || (error && currentState !== ChatState.START)) {
       setIsTyping(true);
       const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
-      // Add the current message to history for the API call
+      chatHistory.push({ role: 'user', content: messageText });
+      
+      // Add context about the scheme we're applying for
+      const schemeContext = `
+        Current Context: The user is applying for the scheme: "${applyingScheme.name}".
+        Scheme Benefits: ${applyingScheme.benefits}
+        Requirements: ${applyingScheme.criteria}
+        Required Documents: ${applyingScheme.documents}
+        
+        Answer their question based on these details. If they are asking for help filling the form, provide clear instructions.
+      `;
+      
+      chatHistory.push({ role: 'system', content: schemeContext });
+
+      const response = await chatWithGemini(chatHistory, lang);
+      addAiMessage(response);
+      return;
+    }
+    
+    // If there's an error but it looks like a question or "doubt", let Gemini handle it
+    const isProbablyQuestion = messageText.includes('?') || 
+                               messageText.length > 20 || 
+                               ['why', 'how', 'what', 'who', 'where', 'can you'].some(word => messageText.toLowerCase().includes(word));
+
+    if (currentState === ChatState.SHOW_RESULTS || (error && (isProbablyQuestion || currentState !== ChatState.START))) {
+      setIsTyping(true);
+      const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
       chatHistory.push({ role: 'user', content: messageText });
 
-      const response = await chatWithGemini(chatHistory);
+      // Provide context about the current state if we're in onboarding
+      if (currentState !== ChatState.SHOW_RESULTS && error) {
+        chatHistory.push({ 
+          role: 'system', 
+          content: `The user was just asked for their ${currentState.replace('ASK_', '').toLowerCase()}. They provided: "${messageText}". Answer their question/doubt and then gently remind them to provide the requested information.` 
+        });
+      }
+
+      const response = await chatWithGemini(chatHistory, lang);
       addAiMessage(response);
+      return;
+    }
+
+    if (error && currentState !== ChatState.START) {
+      addAiMessage(t.chatbot[error] || error);
       return;
     }
 
@@ -349,6 +422,9 @@ const AiAssistantPage: React.FC = () => {
         if (input === t.chatbot.use_profile) {
           const session = JSON.parse(localStorage.getItem('userSession') || '{}');
           setUserProfile(session);
+          if (session.mobile) {
+            setPhoneNumber(session.mobile.replace(/\D/g, '').slice(0, 10));
+          }
           addAiMessage(`I've loaded your profile, ${session.fullName || session.name}. Running eligibility analysis...`);
           setCurrentState(ChatState.PROCESS_ELIGIBILITY);
           runEligibility(session);
@@ -373,7 +449,7 @@ const AiAssistantPage: React.FC = () => {
       case ChatState.ASK_AGE:
         // In a real app, we'd parse DOB and calculate age. For now, assume input is age if simple number, or DOB.
         setUserProfile({ ...userProfile, age: parseInt(input) || 25 });
-        addAiMessage(t.chatbot.ask_occupation);
+        addAiMessage(t.chatbot.ask_occupation, VALID_OCCUPATIONS);
         setCurrentState(ChatState.ASK_OCCUPATION);
         break;
 
@@ -419,6 +495,38 @@ const AiAssistantPage: React.FC = () => {
     setCurrentStep(1);
     const msg = (t.chatbot.apply_help || '').replace('{name}', scheme.name);
     addAiMessage(msg);
+    
+    // Fetch profile documents to check for existing ones
+    const session = localStorage.getItem('userSession');
+    if (session) {
+      const user = JSON.parse(session);
+      fetchProfileDocuments(user.id);
+    }
+  };
+
+  const fetchProfileDocuments = async (userId: number) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/documents/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProfileDocs(data);
+      }
+    } catch (err) {
+      console.error('Error fetching profile documents:', err);
+    }
+  };
+
+  const getDocCategory = (name: string): string => {
+    const n = name.toLowerCase();
+    if (n.includes('aadhaar')) return 'aadhar';
+    if (n.includes('pan card')) return 'pan';
+    if (n.includes('income')) return 'income';
+    return 'other';
+  };
+
+  const findDocInProfile = (docName: string) => {
+    const category = getDocCategory(docName);
+    return profileDocs.find(d => d.document_type === category);
   };
 
   const handleBackToSchemes = () => {
@@ -428,25 +536,85 @@ const AiAssistantPage: React.FC = () => {
   };
 
   const handleNextStep = () => {
+    if (currentStep === 1 && (!phoneNumber || phoneNumber.length !== 10)) {
+      setCurrentState(ChatState.ASK_PHONE_APP);
+      addAiMessage(t.chatbot.ask_phone_app);
+      return;
+    }
+    
     if (currentStep < 4) {
-      setCurrentStep(prev => prev + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
       const stepMessages = [
         "",
-        "Great! Now please fill in some basic details required for the application.",
-        "Almost done. Please review and confirm the declarations before submission.",
-        "Your application has been submitted successfully! We'll notify you once it's processed."
+        "", // Step 1 (Checklist) is already active
+        "Great! Now please fill in some basic details required for the application.", // Step 2 (Form)
+        "Your application has been submitted successfully! We'll notify you once it's processed.", // Step 3 (Submitted)
+        "Please login to access your full dashboard and track your application." // Step 4 (Login Required)
       ];
-      if (stepMessages[currentStep]) {
-        addAiMessage(stepMessages[currentStep]);
+      if (stepMessages[nextStep]) {
+        addAiMessage(stepMessages[nextStep]);
       }
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string) => {
+    const file = e.target.files?.[0];
+    const session = localStorage.getItem('userSession');
+    if (file && session) {
+      setIsUploading(docType);
+      const user = JSON.parse(session);
+      
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('userId', user.id);
+      formData.append('userName', user.name || user.fullName);
+      formData.append('documentType', getDocCategory(docType));
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          setUploadedFiles(prev => ({ ...prev, [docType]: file }));
+          fetchProfileDocuments(user.id); // Refresh profile docs
+          addAiMessage(`I've securely saved your ${docType} to your profile as well.`);
+        } else {
+          alert('Upload failed. Please try again.');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert('Upload failed. Please try again.');
+      } finally {
+        setIsUploading(null);
+      }
+    }
+  };
+
+  const triggerFileInput = (docType: string) => {
+    if (fileInputRef.current) {
+      fileInputRef.current.setAttribute('data-doc-type', docType);
+      fileInputRef.current.click();
     }
   };
 
   const renderApplicationStep = () => {
     switch (currentStep) {
       case 1:
+        const allDocsUploaded = applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc]);
         return (
           <div className="space-y-6">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={(e) => {
+                const docType = fileInputRef.current?.getAttribute('data-doc-type');
+                if (docType) handleFileUpload(e, docType);
+              }}
+            />
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
                 <FileText className="w-5 h-5 text-cyan-400" />
@@ -455,25 +623,101 @@ const AiAssistantPage: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              {applyingScheme.documents_required.map((doc: string, i: number) => (
-                <div key={i} className="flex items-center space-x-3 p-3 bg-app-surface border border-app-border rounded-xl transition-colors">
-                  <div className="w-5 h-5 rounded border border-app-border flex items-center justify-center transition-colors">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              {applyingScheme.documents_required.map((doc: string, i: number) => {
+                const profileDoc = findDocInProfile(doc);
+                const isAvailableInProfile = !!profileDoc && !uploadedFiles[doc];
+
+                return (
+                  <div key={i} className="flex flex-col p-4 bg-app-surface border border-app-border rounded-2xl transition-all group hover:bg-app-surface-hover">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${ (uploadedFiles[doc] || isAvailableInProfile) ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-app-bg border border-app-border'}`}>
+                          {(uploadedFiles[doc] || isAvailableInProfile) ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <div className="w-1.5 h-1.5 rounded-full bg-app-text-muted/30" />}
+                        </div>
+                        <span className="text-sm font-medium text-app-text">{doc}</span>
+                      </div>
+                      {uploadedFiles[doc] ? (
+                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded">Uploaded</span>
+                      ) : isAvailableInProfile ? (
+                        <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded">Matched in Profile</span>
+                      ) : isUploading === doc ? (
+                        <div className="flex items-center space-x-2 text-cyan-400">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Uploading...</span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2 py-0.5 rounded">Required</span>
+                      ) }
+                    </div>
+
+                    {uploadedFiles[doc] ? (
+                      <div className="flex items-center justify-between p-2 bg-app-bg/50 rounded-xl border border-app-border">
+                        <div className="flex items-center space-x-2 truncate">
+                          <Paperclip className="w-3.5 h-3.5 text-app-text-muted" />
+                          <span className="text-xs text-app-text-muted truncate">{uploadedFiles[doc]?.name}</span>
+                        </div>
+                        <button 
+                          onClick={() => triggerFileInput(doc)} 
+                          className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 transition-colors uppercase"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : isAvailableInProfile ? (
+                      <div className="flex items-center justify-between p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                        <div className="flex items-center space-x-2 truncate">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-xs text-emerald-400 truncate">Stored Securely</span>
+                        </div>
+                        <button 
+                          onClick={() => triggerFileInput(doc)} 
+                          className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 transition-colors uppercase"
+                        >
+                          Update
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        disabled={isUploading !== null}
+                        onClick={() => triggerFileInput(doc)}
+                        className="w-full py-2.5 bg-app-bg border border-app-border border-dashed hover:border-cyan-500/50 hover:bg-cyan-500/5 rounded-xl flex items-center justify-center space-x-2 text-app-text-muted hover:text-cyan-400 transition-all group-hover:border-app-text-muted/30"
+                      >
+                        <Upload className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase tracking-wider">Upload from PC</span>
+                      </button>
+                    )}
                   </div>
-                  <span className="text-sm text-app-text-muted transition-colors">{doc}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <div className="pt-6 border-t border-app-border transition-colors">
-              <h4 className="text-sm font-bold text-app-text mb-4 transition-colors">Verify Identity</h4>
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center space-x-4">
+            <div className="pt-6 space-y-4">
+              <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl flex items-center space-x-4">
                 <ShieldCheck className="w-8 h-8 text-emerald-400" />
                 <div>
                   <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Aadhaar Verified</div>
-                  <div className="text-[10px] text-emerald-400/70">Your identity has been auto-verified via your profile.</div>
+                  <div className="text-[10px] text-emerald-400/70">Securely linked to your profile.</div>
                 </div>
               </div>
+
+              <button
+                disabled={!applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc))}
+                onClick={handleNextStep}
+                className={`w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center space-x-2 ${
+                  applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc))
+                  ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20 hover:bg-cyan-400' 
+                  : 'bg-app-surface text-app-text-muted border border-app-border cursor-not-allowed'
+                }`}
+              >
+                <span>
+                  {!applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc)) 
+                    ? 'Please Upload All Documents' 
+                    : (!phoneNumber || phoneNumber.length !== 10)
+                      ? 'Provide Mobile Number (in Chat)' 
+                      : 'Continue to Application Form'}
+                </span>
+                {applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc)) && <ArrowRight className="w-5 h-5" />}
+              </button>
             </div>
           </div>
         );
@@ -488,7 +732,14 @@ const AiAssistantPage: React.FC = () => {
               </div>
               <div>
                 <label className="text-xs text-app-text-muted block mb-1">Mobile Number</label>
-                <input type="text" placeholder="Enter mobile number" className="w-full bg-app-bg border border-app-border rounded-xl p-3 text-app-text text-sm transition-colors" />
+                <input
+                  type="text"
+                  value={phoneNumber}
+                  onChange={(e) => handlePhoneNumberChange(e.target.value)}
+                  placeholder="Enter 10-digit mobile number"
+                  className={`w-full bg-app-bg border ${phoneError ? 'border-red-500/50 focus:border-red-500' : 'border-app-border focus:border-cyan-500/50'} rounded-xl p-3 text-app-text text-sm transition-colors`}
+                />
+                {phoneError && <p className="text-[10px] text-red-500 mt-1 ml-1">{phoneError}</p>}
               </div>
             </div>
 
@@ -500,8 +751,12 @@ const AiAssistantPage: React.FC = () => {
             </div>
 
             <button
-              onClick={() => setCurrentStep(3)}
-              className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-white rounded-2xl font-bold transition-all shadow-lg shadow-cyan-500/20"
+              disabled={phoneNumber.length !== 10 || !!phoneError}
+              onClick={handleNextStep}
+              className={`w-full py-4 rounded-2xl font-bold transition-all shadow-lg ${phoneNumber.length === 10 && !phoneError
+                  ? 'bg-cyan-500 hover:bg-cyan-400 text-white shadow-cyan-500/20'
+                  : 'bg-app-surface text-app-text-muted border border-app-border cursor-not-allowed'
+                }`}
             >
               Submit Application
             </button>
@@ -634,7 +889,7 @@ const AiAssistantPage: React.FC = () => {
                   )}
                   
                   {/* Message Actions */}
-                  <div className={`mt-3 pt-3 border-t border-current/10 flex items-center space-x-3 transition-opacity ${editingMessageId === msg.id ? 'hidden' : 'opacity-0 group-hover:opacity-100'}`}>
+                  <div className={`mt-3 pt-3 border-t border-current/10 flex items-center space-x-3 transition-opacity ${editingMessageId === msg.id ? 'hidden' : 'opacity-100'}`}>
                     {msg.role === 'user' && (
                       <button onClick={() => startEditing(msg)} className="p-1 hover:text-cyan-400 transition-colors" title="Edit">
                         <Edit2 className="w-3.5 h-3.5" />
@@ -817,13 +1072,13 @@ const AiAssistantPage: React.FC = () => {
                 <div className="bg-app-surface border border-app-border rounded-3xl p-8 space-y-6 transition-colors">
                   {renderApplicationStep()}
 
-                  {currentStep < 4 && (
+                  {currentStep === 3 && (
                     <div className="pt-6">
                       <button
-                        onClick={handleNextStep}
-                        className="w-full py-4 bg-cyan-500 text-white rounded-2xl font-bold hover:bg-cyan-400 transition-all shadow-lg flex items-center justify-center space-x-2"
+                        onClick={() => setCurrentStep(4)}
+                        className="w-full py-4 bg-app-surface text-app-text-muted border border-app-border rounded-2xl font-bold hover:bg-app-surface-hover transition-all flex items-center justify-center space-x-2"
                       >
-                        <span>{currentStep === 3 ? 'Finalize & Submit' : 'Proceed to Next Step'}</span>
+                        <span>View Status in Dashboard</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>

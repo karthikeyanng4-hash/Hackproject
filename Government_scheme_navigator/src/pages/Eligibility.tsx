@@ -13,6 +13,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { getRecommendations } from '../ai/recommendationEngine';
+import { VALID_OCCUPATIONS } from '../ai/aiAssistant';
 import translations from '../data/translations.json';
 
 const Eligibility: React.FC = () => {
@@ -126,12 +127,9 @@ const Eligibility: React.FC = () => {
                     onChange={(e) => setProfile({ ...profile, occupation: e.target.value })}
                     className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
                   >
-                    <option>Student</option>
-                    <option>Farmer</option>
-                    <option>Entrepreneur</option>
-                    <option>Unemployed</option>
-                    <option>Govt Employee</option>
-                    <option>Private Employee</option>
+                    {VALID_OCCUPATIONS.map(occ => (
+                      <option key={occ} value={occ}>{occ}</option>
+                    ))}
                   </select>
                 </div>
               </div>
