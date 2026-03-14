@@ -111,6 +111,17 @@ const Dashboard: React.FC = () => {
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (editForm.mobile && editForm.mobile.length !== 10) {
+      alert('Mobile number must be exactly 10 digits.');
+      return;
+    }
+
+    if (editForm.aadhaar && editForm.aadhaar.length !== 12) {
+      alert('Aadhaar number must be exactly 12 digits.');
+      return;
+    }
+
     const age = calculateAge(editForm.dob);
     const updatedUser = { ...editForm, age };
     setUser(updatedUser);
@@ -306,7 +317,11 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5">{t.dashboard.mobile}</label>
-                      <input type="tel" value={editForm.mobile} onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })} className="w-full bg-app-bg border border-app-border rounded-xl py-2.5 px-4 text-app-text text-sm focus:border-cyan-500/50 outline-none" />
+                      <input type="tel" maxLength={10} value={editForm.mobile} onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value.replace(/\D/g, '') })} className="w-full bg-app-bg border border-app-border rounded-xl py-2.5 px-4 text-app-text text-sm focus:border-cyan-500/50 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5">{t.dashboard.aadhaar}</label>
+                      <input type="text" maxLength={12} value={editForm.aadhaar} onChange={(e) => setEditForm({ ...editForm, aadhaar: e.target.value.replace(/\D/g, '') })} placeholder="123456789012" className="w-full bg-app-bg border border-app-border rounded-xl py-2.5 px-4 text-app-text text-sm focus:border-cyan-500/50 outline-none" />
                     </div>
                     <div>
                       <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5">Area Type</label>

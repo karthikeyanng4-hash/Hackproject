@@ -52,6 +52,18 @@ const Signup: React.FC = () => {
       return;
     }
 
+    if (formData.mobile.length !== 10) {
+      setError('Mobile number must be exactly 10 digits.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.aadhaar && formData.aadhaar.length !== 12) {
+      setError('Aadhaar number must be exactly 12 digits.');
+      setIsLoading(false);
+      return;
+    }
+
     const age = calculateAge(formData.dob);
 
     // Real API call
@@ -173,7 +185,7 @@ const Signup: React.FC = () => {
 
                 <div>
                   <label className="block text-app-text-muted text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1">Mobile Number</label>
-                  <input required type="tel" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} placeholder="9876543210" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
+                  <input required type="tel" maxLength={10} value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} placeholder="9876543210" className="w-full bg-app-bg border border-app-border rounded-2xl py-2.5 px-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all text-sm" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

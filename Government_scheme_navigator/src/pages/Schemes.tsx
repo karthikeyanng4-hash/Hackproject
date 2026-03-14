@@ -212,7 +212,7 @@ const Schemes: React.FC = () => {
 
 
   return (
-    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-app-bg min-h-screen transition-colors">
+    <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-app-bg min-h-screen transition-colors">
       {/* Search & Filter Header */}
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-app-text mb-4 tracking-tight">{t.nav.schemes}</h1>

@@ -1236,7 +1236,7 @@ const AiAssistantPage: React.FC = () => {
   };
 
   return (
-    <div className="pt-20 h-screen bg-app-bg flex flex-col md:flex-row overflow-hidden transition-colors">
+    <div className="pt-24 h-screen bg-app-bg flex flex-col md:flex-row overflow-hidden transition-colors">
       <input
         type="file"
         ref={initialDocInputRef}

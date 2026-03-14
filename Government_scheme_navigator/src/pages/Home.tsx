@@ -103,7 +103,7 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="pt-20 bg-app-bg text-app-text transition-colors duration-300">
+    <div className="pt-24 bg-app-bg text-app-text transition-colors duration-300">
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-cyan-500/10 blur-[120px] rounded-full -z-10"></div>
