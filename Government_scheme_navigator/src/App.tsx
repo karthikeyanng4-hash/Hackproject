@@ -23,7 +23,6 @@ const ScrollToTop = () => {
 
 const AppContent = () => {
   const location = useLocation();
-  const isAssistantPage = location.pathname === '/assistant';
 
   return (
     <div className="min-h-screen bg-app-bg text-app-text selection:bg-cyan-500/30 selection:text-cyan-200 transition-colors duration-300">
@@ -42,7 +41,7 @@ const AppContent = () => {
           <Route path="/personal-details" element={<PersonalDetails />} />
         </Routes>
       </main>
-      {!isAssistantPage && <Footer />}
+      <Footer />
       <CommandPalette />
     </div>
   );

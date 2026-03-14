@@ -11,8 +11,6 @@ import {
   ExternalLink,
   CheckCircle2,
   X,
-  Mic,
-  MicOff,
   Volume2,
   VolumeX,
   Filter,
@@ -29,11 +27,9 @@ const Schemes: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedScheme, setSelectedScheme] = useState<any>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [filteredSchemes, setFilteredSchemes] = useState<any[]>(schemesData);
   const [allSchemes, setAllSchemes] = useState<any[]>(schemesData);
-  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchSchemes = async () => {
@@ -89,10 +85,14 @@ const Schemes: React.FC = () => {
   useEffect(() => {
     const id = searchParams.get('id');
     if (id) {
-      const scheme = schemesData.find((s: any) => s.id === id);
-      if (scheme) setSelectedScheme(scheme);
+      const source = allSchemes.length > 0 ? allSchemes : schemesData;
+      const scheme = source.find((s: any) => s.id === id);
+      if (scheme) {
+        setSelectedScheme(scheme);
+        setSearchTerm(scheme.name);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, allSchemes]);
 
   // Check if current scheme is saved
   useEffect(() => {
@@ -103,8 +103,8 @@ const Schemes: React.FC = () => {
           const user = JSON.parse(session);
           try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/schemes/saved/${user.id}`);
-            const data = await response.json();
             if (response.ok) {
+              const data = await response.json();
               setIsSaved(data.some((s: any) => s.id === selectedScheme.id));
             }
           } catch (err) {
@@ -202,74 +202,25 @@ const Schemes: React.FC = () => {
     // Apply Search and Category Filter
     filtered = filtered.filter(scheme => 
       ((scheme.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-       (scheme.description || '').toLowerCase().includes(searchTerm.toLowerCase())) &&
+       (scheme.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (scheme.category || '').toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedCategory === 'All' || scheme.category === selectedCategory)
     );
     setFilteredSchemes(filtered);
   }, [searchTerm, selectedCategory, searchParams, allSchemes]);
 
 
-  const toggleVoiceSearch = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      alert('Voice search is not supported in this browser.');
-      return;
-    }
-
-    if (isListening) {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {
-          console.error('Error stopping speech recognition', e);
-        }
-      }
-      setIsListening(false);
-    } else {
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = lang === 'hi' ? 'hi-IN' : lang === 'ta' ? 'ta-IN' : 'en-IN';
-
-      recognition.onstart = () => {
-        setIsListening(true);
-      };
-
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setSearchTerm(transcript);
-      };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
-      };
-      
-      recognition.onend = () => {
-        setIsListening(false);
-      };
-
-      try {
-        recognition.start();
-      } catch (err) {
-        console.error('Error starting speech recognition:', err);
-        setIsListening(false);
-      }
-    }
-  };
 
   return (
-    <div className="pt-24 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-app-bg min-h-screen transition-colors">
+    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-app-bg min-h-screen transition-colors">
       {/* Search & Filter Header */}
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-app-text mb-4 tracking-tight">{t.nav.schemes}</h1>
         <p className="text-app-text-muted mb-8 max-w-2xl">{t.schemes.subtitle}</p>
         
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-app-text-muted" />
+        <div className="flex flex-col gap-6">
+          <div className="relative w-full group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-app-text-muted group-focus-within:text-cyan-500 transition-colors" />
             <input
               ref={searchInputRef}
               type="text"
@@ -285,19 +236,19 @@ const Schemes: React.FC = () => {
                   }
                 }
               }}
-              className="w-full bg-app-surface border border-app-border rounded-2xl py-4 pl-12 pr-12 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all shadow-xl"
+              className="w-full bg-app-surface border border-app-border rounded-2xl py-4 pl-12 pr-12 text-app-text placeholder-app-text-muted/70 focus:outline-none focus:border-cyan-500/50 focus:ring-4 focus:ring-cyan-500/10 transition-all shadow-xl caret-cyan-500 font-medium"
             />
-            <button
-              onClick={toggleVoiceSearch}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${
-                isListening ? 'bg-red-500 text-white animate-pulse' : 'text-app-text-muted hover:text-cyan-400'
-              }`}
-            >
-              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            </button>
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-app-bg text-app-text-muted hover:text-app-text transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2 no-scrollbar">
             {searchParams.get('filter') && (
               <button
                 onClick={() => navigate('/schemes')}

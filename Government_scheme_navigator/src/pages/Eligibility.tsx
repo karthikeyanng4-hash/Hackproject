@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   User, 
@@ -29,6 +30,7 @@ const Eligibility: React.FC = () => {
   const [results, setResults] = useState<any[] | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lang, setLang] = useState('en');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const savedLang = localStorage.getItem('appLang') || 'en';
@@ -94,8 +96,9 @@ const Eligibility: React.FC = () => {
                   <input
                     required
                     type="number"
+                    min="0"
                     value={profile.age}
-                    onChange={(e) => setProfile({ ...profile, age: parseInt(e.target.value) })}
+                    onChange={(e) => setProfile({ ...profile, age: Math.max(0, parseInt(e.target.value) || 0) })}
                     className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text focus:outline-none focus:border-cyan-500/50 transition-all"
                   />
                 </div>
@@ -160,8 +163,9 @@ const Eligibility: React.FC = () => {
                   <input
                     required
                     type="number"
+                    min="0"
                     value={profile.income}
-                    onChange={(e) => setProfile({ ...profile, income: parseInt(e.target.value) })}
+                    onChange={(e) => setProfile({ ...profile, income: Math.max(0, parseInt(e.target.value) || 0) })}
                     className="w-full bg-app-bg border border-app-border rounded-2xl py-3 pl-11 pr-4 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all"
                     placeholder="e.g. 500000"
                   />
@@ -228,7 +232,8 @@ const Eligibility: React.FC = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-app-surface border border-app-border p-6 rounded-3xl hover:border-cyan-500/30 transition-all group"
+                  onClick={() => navigate(`/schemes?id=${scheme.id}`)}
+                  className="bg-app-surface border border-app-border p-6 rounded-3xl hover:border-cyan-500/30 transition-all group cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -244,9 +249,9 @@ const Eligibility: React.FC = () => {
                       <h4 className="text-app-text font-bold mb-2 group-hover:text-cyan-400 transition-colors">{scheme.name}</h4>
                       <p className="text-app-text-muted text-xs line-clamp-2 mb-4">{scheme.description}</p>
                     </div>
-                    <button className="p-2 bg-app-bg rounded-full text-app-text-muted hover:bg-cyan-500 hover:text-white transition-all">
+                    <div className="p-2 bg-app-bg rounded-full text-app-text-muted group-hover:bg-cyan-500 group-hover:text-white transition-all">
                       <ArrowRight className="w-4 h-4" />
-                    </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}

@@ -5,7 +5,7 @@
  */
 
 let voices: SpeechSynthesisVoice[] = [];
-let isSpeechEnabled = false;
+let isSpeechEnabled = true;
 
 // Initialize voices
 const loadVoices = () => {

@@ -32,7 +32,7 @@ import {
 
 import { ChatState, ChatMessage, validateInput, VALID_OCCUPATIONS } from '../ai/aiAssistant';
 import { getRecommendations } from '../ai/recommendationEngine';
-import { chatWithGemini } from '../ai/GeminiService';
+import { chatWithGemini, analyzeDocumentWithGemini } from '../ai/GeminiService';
 import translations from '../data/translations.json';
 import { speakText, stopSpeaking, setSpeechEnabled } from '../ai/speechUtils';
 
@@ -64,11 +64,37 @@ const AiAssistantPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialDocInputRef = useRef<HTMLInputElement>(null);
   const startedRef = useRef(false);
 
+  const triggerInitialDocAnalysis = () => {
+    if (initialDocInputRef.current) {
+      initialDocInputRef.current.click();
+    }
+  };
+
+  const handleInitialDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    e.target.value = ''; // reset input
+    
+    setIsTyping(true);
+    addAiMessage(`I am analyzing your document: ${file.name}. Please wait a moment while I extract the details...`);
+    
+    try {
+      const result = await analyzeDocumentWithGemini(file, lang);
+      addAiMessage(result);
+    } catch (err) {
+      console.error(err);
+      addAiMessage("Sorry, I couldn't analyze the document right now.");
+    } finally {
+      setIsTyping(false);
+      setCurrentState(ChatState.SHOW_RESULTS);
+    }
+  };
+
   useEffect(() => {
-    // Enable speech when assistant page is active
-    setSpeechEnabled(true);
 
     const savedLang = localStorage.getItem('appLang') || 'en';
     setLang(savedLang);
@@ -135,8 +161,6 @@ const AiAssistantPage: React.FC = () => {
 
     return () => {
       window.removeEventListener('languageChange', handleLangChange);
-      // Disable speech when leaving assistant page
-      setSpeechEnabled(false);
     };
   }, []);
 
@@ -230,10 +254,10 @@ const AiAssistantPage: React.FC = () => {
   const checkLoginStatus = () => {
     const session = localStorage.getItem('userSession');
     if (session) {
-      addAiMessage(t.chatbot.profile_prompt, [t.chatbot.use_profile, t.chatbot.enter_manually]);
+      addAiMessage(t.chatbot.profile_prompt, [t.chatbot.use_profile, "Upload Document", t.chatbot.enter_manually]);
       setCurrentState(ChatState.ASK_USE_PROFILE);
     } else {
-      addAiMessage(t.chatbot.login_prompt, ["Login", "Continue as Guest"]);
+      addAiMessage(t.chatbot.login_prompt, ["Login", "Upload Document", "Continue as Guest"]);
       setCurrentState(ChatState.CHECK_LOGIN);
     }
   };
@@ -518,7 +542,9 @@ const AiAssistantPage: React.FC = () => {
   const processState = (state: ChatState, input: string) => {
     switch (state) {
       case ChatState.CHECK_LOGIN:
-        if (input.toLowerCase().includes('login')) {
+        if (input === "Upload Document") {
+          triggerInitialDocAnalysis();
+        } else if (input.toLowerCase().includes('login')) {
           window.location.href = '/login';
         } else {
           addAiMessage(t.chatbot.ask_name);
@@ -527,7 +553,9 @@ const AiAssistantPage: React.FC = () => {
         break;
 
       case ChatState.ASK_USE_PROFILE:
-        if (input === t.chatbot.use_profile) {
+        if (input === "Upload Document") {
+          triggerInitialDocAnalysis();
+        } else if (input === t.chatbot.use_profile) {
           const session = JSON.parse(localStorage.getItem('userSession') || '{}');
           setUserProfile(session);
           if (session.mobile) {
@@ -1208,7 +1236,14 @@ const AiAssistantPage: React.FC = () => {
   };
 
   return (
-    <div className="pt-16 h-screen bg-app-bg flex flex-col md:flex-row overflow-hidden transition-colors">
+    <div className="pt-20 h-screen bg-app-bg flex flex-col md:flex-row overflow-hidden transition-colors">
+      <input
+        type="file"
+        ref={initialDocInputRef}
+        className="hidden"
+        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+        onChange={handleInitialDocUpload}
+      />
       {/* Left Side: Chat Interface */}
       <div className="w-full md:w-1/2 flex flex-col border-r border-app-border bg-app-surface/30 h-full">
         <div className="p-6 border-b border-app-border flex items-center justify-between bg-app-surface/50 backdrop-blur-md z-10">

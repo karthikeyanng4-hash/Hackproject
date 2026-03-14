@@ -78,3 +78,92 @@ export async function chatWithGemini(messages: { role: string; content: string }
     return `I'm having trouble connecting to my brain right now. (Error: ${errorMessage}). Please try again later.`;
   }
 }
+
+export async function analyzeDocumentWithGemini(file: File, language: string = 'en') {
+  if (!API_KEY || API_KEY === "MY_GEMINI_API_KEY") {
+    return "API Key not configured. Please add your VITE_GEMINI_API_KEY to the .env file.";
+  }
+
+  try {
+    const langMap: Record<string, string> = {
+      'en': 'English',
+      'hi': 'Hindi',
+      'ta': 'Tamil'
+    };
+    const targetLang = langMap[language] || 'English';
+
+    // Convert file to base64
+    const base64Data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        if (base64String) {
+          resolve(base64String.split(',')[1]);
+        } else {
+          reject(new Error("Failed to read file"));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    const docPrompt = `Analyze this document and extract the following details if present:
+- Full Name
+- Age / Date of Birth
+- Gender
+- Address
+- State / District / Village
+- Occupation
+- Annual Income
+- Land Ownership
+- Category (SC/ST/OBC/General)
+- Any government ID numbers
+
+Return the extracted information in clean JSON format. Based on this, suggest major Indian government schemes the citizen may be eligible for (e.g. PM-KISAN, Ayushman Bharat, PM Awas Yojana). Provide a simple, easy-to-understand reason for eligibility.
+
+Format the output EXACTLY in these three sections, using HTML for styling and your mandatory header:
+
+<h2 style="color: white; font-weight: bold; text-align: left;">Agentic AI</h2>
+<b>Extracted Citizen Details</b><br/>
+<pre>
+{
+  "name": "...",
+  "age": "...",
+  "gender": "...",
+  "state": "...",
+  "district": "...",
+  "occupation": "...",
+  "annual_income": "...",
+  "land_owned": "...",
+  "category": "..."
+}
+</pre><br/><br/>
+<b>Recommended Government Schemes</b><br/>
+<ul>
+<li>...</li>
+</ul><br/>
+<b>Reason for Eligibility</b><br/>
+<ul>
+<li>...</li>
+</ul>
+
+Reply in ${targetLang}.`;
+
+    const model = ai.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent([
+      docPrompt,
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: file.type
+        }
+      }
+    ]);
+
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("Gemini Document Analysis Error:", error);
+    return "Sorry, I encountered an error while analyzing the document.";
+  }
+}
