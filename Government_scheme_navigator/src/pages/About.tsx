@@ -38,7 +38,7 @@ const About: React.FC = () => {
     {
       icon: Bot,
       title: lang === 'hi' ? "एआई सहायता" : lang === 'ta' ? "AI உதவி" : "Step 3: AI Assistance",
-      desc: lang === 'hi' ? "दस्तावेजों और आवेदन चरणों पर व्यक्तिगत मार्गदर्शन प्राप्त करने के लिए हमारे सहायक से चैट करें।" : lang === 'ta' ? "ஆவணங்கள் மற்றும் விண்ணப்பப் படிகள் குறித்து தனிப்பட்ட வழிகாட்டுதலைப் பெற எங்கள் உதவியாளருடன் அரட்டையடிக்கவும்." : "Chat with our assistant to get personalized guidance on documents and application steps.",
+      desc: lang === 'hi' ? "दस्तावेजों और आवेदन चरणों पर व्यक्तिगत मार्गदर्शन प्राप्त करने के लिए हमारे सहायक से चैट करें।" : lang === 'ta' ? "ஆவணங்கள் மற்றும் விண்ணப்பப் படிகள் குறித்து தனிப்பட்ட வழிகாட்டுதலைப் பெற எங்கள் உதவியாளருடன் அரட்டையடிக்கவும்." : "Chat with our Agentic AI to get personalized guidance on documents and application steps.",
       color: "text-purple-400",
       bg: "bg-purple-400/10"
     },

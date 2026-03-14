@@ -5,7 +5,7 @@
       "schemes": "Schemes",
       "eligibility": "Eligibility Checker",
       "dashboard": "Dashboard",
-      "assistant": "AI Assistant",
+      "assistant": "Agentic AI",
       "about": "About",
       "contact": "Contact",
       "personal_details": "Personal Details",
@@ -15,7 +15,7 @@
     },
     "home": {
       "hero_title": "Empowering Citizens with AI-Driven Welfare",
-      "hero_subtitle": "Discover government schemes you are eligible for in seconds using our advanced AI assistant.",
+      "hero_subtitle": "Discover government schemes you are eligible for in seconds using our advanced Agentic AI.",
       "get_started": "Get Started",
       "features_title": "Why Choose GovAssist AI?",
       "learn_more": "Learn How it Works",
@@ -56,7 +56,7 @@
     },
     "auth": {
       "login_title": "Welcome Back",
-      "login_subtitle": "Access your personalized welfare dashboard and AI assistant.",
+      "login_subtitle": "Access your personalized welfare dashboard and Agentic AI.",
       "signup_title": "Create Account",
       "signup_subtitle": "Join GovAssist AI to discover and apply for government schemes.",
       "email": "Email Address",
@@ -93,7 +93,7 @@
       "recommended_title": "AI Recommended Schemes",
       "view_all": "View All",
       "no_analysis": "No Analysis Found",
-      "no_analysis_desc": "Talk to our AI assistant to discover schemes you are eligible for.",
+      "no_analysis_desc": "Talk to our Agentic AI to discover schemes you are eligible for.",
       "start_ai_chat": "Start AI Chat",
       "recent_applications": "Recent Applications",
       "applied": "Applied",
@@ -102,7 +102,7 @@
       "cancel": "Cancel"
     },
     "assistant": {
-      "title": "AI Welfare Assistant",
+      "title": "Agentic AI Welfare",
       "subtitle": "Chat with our AI to find and apply for schemes.",
       "voice_start": "Start Voice",
       "voice_stop": "Stop Voice",
@@ -178,7 +178,7 @@
       "connect": "Connect",
       "schemes": "Schemes",
       "eligibility": "Eligibility Checker",
-      "assistant": "AI Assistant",
+      "assistant": "Agentic AI",
       "dashboard": "Dashboard",
       "how_it_works": "How it Works",
       "privacy_policy": "Privacy Policy",

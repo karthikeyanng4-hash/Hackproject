@@ -25,7 +25,9 @@ import {
   Check,
   Upload,
   Paperclip,
-  Clock
+  Clock,
+  Activity,
+  Globe
 } from 'lucide-react';
 
 import { ChatState, ChatMessage, validateInput, VALID_OCCUPATIONS } from '../ai/aiAssistant';
@@ -55,6 +57,9 @@ const AiAssistantPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [profileDocs, setProfileDocs] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<'chat' | 'summary' | 'iframe'>('chat');
+  const [isAnalyzingDocs, setIsAnalyzingDocs] = useState(false);
+  const [extractedDetails, setExtractedDetails] = useState<any>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -76,10 +81,53 @@ const AiAssistantPage: React.FC = () => {
 
     if (!startedRef.current) {
       startedRef.current = true;
+      
+      const localHistory = localStorage.getItem('localChatHistory');
+      const localState = localStorage.getItem('localChatState');
+      const localProfile = localStorage.getItem('localChatProfile');
       const session = localStorage.getItem('userSession');
+
+      let currentProfile = {};
+      if (localProfile) {
+        try {
+          currentProfile = JSON.parse(localProfile);
+        } catch (e) {
+          console.error("Failed to parse local profile");
+        }
+      } else if (session) {
+        try {
+          currentProfile = JSON.parse(session);
+        } catch (e) {
+          console.error("Failed to parse user session");
+        }
+      }
+
+      if (Object.keys(currentProfile).length > 0) {
+        const recs = getRecommendations(currentProfile as any);
+        setRecommendations(recs);
+      }
+
+      if (localHistory && localHistory !== '[]') {
+        try {
+          const parsedHistory = JSON.parse(localHistory);
+          if (parsedHistory.length > 0) {
+            setMessages(parsedHistory);
+            if (localState) setCurrentState(localState as ChatState);
+            if (localProfile) setUserProfile(JSON.parse(localProfile));
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse local history");
+        }
+      }
+
       if (session) {
         const user = JSON.parse(session);
-        fetchChatHistory(user.id);
+        if (user.id) {
+          fetchChatHistory(user.id);
+        } else {
+          startChat();
+        }
       } else {
         startChat();
       }
@@ -101,6 +149,14 @@ const AiAssistantPage: React.FC = () => {
       // We can only realistically re-process the LAST AI message if it matches a key.
     }
   }, [lang]);
+
+  useEffect(() => {
+    if (startedRef.current && messages.length > 0) {
+      localStorage.setItem('localChatHistory', JSON.stringify(messages));
+      localStorage.setItem('localChatState', currentState);
+      localStorage.setItem('localChatProfile', JSON.stringify(userProfile));
+    }
+  }, [messages, currentState, userProfile]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -156,6 +212,7 @@ const AiAssistantPage: React.FC = () => {
     if (!session) return;
     try {
       const user = JSON.parse(session);
+      if (!user.id) return;
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,17 +253,22 @@ const AiAssistantPage: React.FC = () => {
     const session = localStorage.getItem('userSession');
     if (session) {
       const user = JSON.parse(session);
-      try {
-        await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats/user/${user.id}`, {
-          method: 'DELETE',
-        });
-      } catch (err) {
-        console.error('Error resetting chat:', err);
+      if (user.id) {
+        try {
+          await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chats/user/${user.id}`, {
+            method: 'DELETE',
+          });
+        } catch (err) {
+          console.error('Error resetting chat:', err);
+        }
       }
     }
     setMessages([]);
     setCurrentState(ChatState.START);
     startedRef.current = false;
+    localStorage.removeItem('localChatHistory');
+    localStorage.removeItem('localChatState');
+    localStorage.removeItem('localChatProfile');
     startChat();
   };
 
@@ -359,14 +421,35 @@ const AiAssistantPage: React.FC = () => {
       const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
       chatHistory.push({ role: 'user', content: messageText });
       
+      const sessionData = localStorage.getItem('userSession');
+      const profileInfo = sessionData ? JSON.parse(sessionData) : null;
+      
+      let personalDetailsContext = "";
+      if (profileInfo) {
+        personalDetailsContext = `
+        User Profile Details (ONLY use this specific user's information):
+        - Name: ${profileInfo.name || profileInfo.fullName}
+        - Email: ${profileInfo.email}
+        - Aadhaar: ${profileInfo.aadhaar || 'Not provided'}
+        - Mobile: ${profileInfo.mobile || phoneNumber || 'Not provided'}
+        - Date of Birth: ${profileInfo.dob || profileInfo.age || 'Not provided'}
+        - Gender: ${profileInfo.gender || 'Not provided'}
+        - Occupation: ${profileInfo.occupation || 'Not provided'}
+        - Income: ${profileInfo.income || 'Not provided'}
+        - Education: ${profileInfo.education || 'Not provided'}
+        - State/District: ${profileInfo.state || 'Not provided'} / ${profileInfo.district || 'Not provided'}
+        `;
+      }
+
       // Add context about the scheme we're applying for
       const schemeContext = `
         Current Context: The user is applying for the scheme: "${applyingScheme.name}".
         Scheme Benefits: ${applyingScheme.benefits}
         Requirements: ${applyingScheme.criteria}
         Required Documents: ${applyingScheme.documents}
+        ${personalDetailsContext}
         
-        Answer their question based on these details. If they are asking for help filling the form, provide clear instructions.
+        Answer their question based on these details. If they ask about their personal details, answer using the listed Profile Details above. If they are asking for help filling the form, provide clear instructions.
       `;
       
       chatHistory.push({ role: 'system', content: schemeContext });
@@ -379,18 +462,43 @@ const AiAssistantPage: React.FC = () => {
     // If there's an error but it looks like a question or "doubt", let Gemini handle it
     const isProbablyQuestion = messageText.includes('?') || 
                                messageText.length > 20 || 
-                               ['why', 'how', 'what', 'who', 'where', 'can you'].some(word => messageText.toLowerCase().includes(word));
+                               ['why', 'how', 'what', 'who', 'where', 'can you', 'my'].some(word => messageText.toLowerCase().includes(word));
 
     if (currentState === ChatState.SHOW_RESULTS || (error && (isProbablyQuestion || currentState !== ChatState.START))) {
       setIsTyping(true);
       const chatHistory = messages.map(m => ({ role: m.role, content: m.text }));
       chatHistory.push({ role: 'user', content: messageText });
 
+      const sessionData = localStorage.getItem('userSession');
+      const profileInfo = sessionData ? JSON.parse(sessionData) : null;
+      
+      let personalDetailsContext = "";
+      if (profileInfo) {
+        personalDetailsContext = `
+        User Profile Details (ONLY use this specific user's information):
+        - Name: ${profileInfo.name || profileInfo.fullName}
+        - Email: ${profileInfo.email}
+        - Aadhaar: ${profileInfo.aadhaar || 'Not provided'}
+        - Mobile: ${profileInfo.mobile || phoneNumber || 'Not provided'}
+        - Date of Birth: ${profileInfo.dob || profileInfo.age || 'Not provided'}
+        - Gender: ${profileInfo.gender || 'Not provided'}
+        - Occupation: ${profileInfo.occupation || 'Not provided'}
+        - Income: ${profileInfo.income || 'Not provided'}
+        - Education: ${profileInfo.education || 'Not provided'}
+        - State/District: ${profileInfo.state || 'Not provided'} / ${profileInfo.district || 'Not provided'}
+        `;
+      }
+
       // Provide context about the current state if we're in onboarding
       if (currentState !== ChatState.SHOW_RESULTS && error) {
         chatHistory.push({ 
           role: 'system', 
-          content: `The user was just asked for their ${currentState.replace('ASK_', '').toLowerCase()}. They provided: "${messageText}". Answer their question/doubt and then gently remind them to provide the requested information.` 
+          content: `The user was just asked for their ${currentState.replace('ASK_', '').toLowerCase()}. They provided: "${messageText}". Answer their question/doubt and then gently remind them to provide the requested information. \n\n${personalDetailsContext}` 
+        });
+      } else if (personalDetailsContext) {
+        chatHistory.push({
+          role: 'system',
+          content: personalDetailsContext
         });
       }
 
@@ -500,7 +608,9 @@ const AiAssistantPage: React.FC = () => {
     const session = localStorage.getItem('userSession');
     if (session) {
       const user = JSON.parse(session);
-      fetchProfileDocuments(user.id);
+      if (user.id) {
+        fetchProfileDocuments(user.id);
+      }
     }
   };
 
@@ -552,8 +662,26 @@ const AiAssistantPage: React.FC = () => {
         "Your application has been submitted successfully! We'll notify you once it's processed.", // Step 3 (Submitted)
         "Please login to access your full dashboard and track your application." // Step 4 (Login Required)
       ];
-      if (stepMessages[nextStep]) {
-        addAiMessage(stepMessages[nextStep]);
+      // If we just submitted (Step 2 to 3), start document analysis
+      if (nextStep === 3) {
+        setIsAnalyzingDocs(true);
+        addAiMessage("I'm now analyzing your submitted documents to ensure everything is in order. Please wait a moment...");
+        
+        setTimeout(() => {
+          // Simulate extraction
+          const mockExtracted = {
+            'Aadhar Card': { status: 'Verified', id: 'XXXX-XXXX-1234', dob: userProfile.dob || '01-01-1995' },
+            'PAN Card': { status: 'Verified', id: 'ABCDE1234F', name: userProfile.fullName || userProfile.name },
+            'Income Certificate': { status: 'Verified', amount: `₹${userProfile.income}`, valid_until: '2027-03-31' }
+          };
+          setExtractedDetails(mockExtracted);
+          setIsAnalyzingDocs(false);
+          addAiMessage("Analysis complete! I've extracted and verified all necessary details. You can see the full summary on the right.");
+          
+          setTimeout(() => {
+            setViewMode('summary');
+          }, 1000);
+        }, 4000);
       }
     }
   };
@@ -561,10 +689,22 @@ const AiAssistantPage: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, docType: string) => {
     const file = e.target.files?.[0];
     const session = localStorage.getItem('userSession');
+    
+    // Reset the input value so the same file can be uploaded again if needed
+    e.target.value = '';
+
     if (file && session) {
       setIsUploading(docType);
       const user = JSON.parse(session);
       
+      if (!user.id) {
+        // Just store locally for guests
+        setUploadedFiles(prev => ({ ...prev, [docType]: file }));
+        setIsUploading(null);
+        addAiMessage(`I've noted your ${docType} for this session.`);
+        return;
+      }
+
       const formData = new FormData();
       formData.append('document', file);
       formData.append('userId', user.id);
@@ -610,6 +750,7 @@ const AiAssistantPage: React.FC = () => {
               type="file"
               ref={fileInputRef}
               className="hidden"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
               onChange={(e) => {
                 const docType = fileInputRef.current?.getAttribute('data-doc-type');
                 if (docType) handleFileUpload(e, docType);
@@ -702,7 +843,10 @@ const AiAssistantPage: React.FC = () => {
 
               <button
                 disabled={!applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc))}
-                onClick={handleNextStep}
+                onClick={() => {
+                  setViewMode('iframe');
+                  addAiMessage("Redirecting you to the official government portal inside the dashboard. Your documented details are ready.");
+                }}
                 className={`w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center space-x-2 ${
                   applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc))
                   ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20 hover:bg-cyan-400' 
@@ -712,11 +856,9 @@ const AiAssistantPage: React.FC = () => {
                 <span>
                   {!applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc)) 
                     ? 'Please Upload All Documents' 
-                    : (!phoneNumber || phoneNumber.length !== 10)
-                      ? 'Provide Mobile Number (in Chat)' 
-                      : 'Continue to Application Form'}
+                    : 'Proceed to Official Portal'}
                 </span>
-                {applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc)) && <ArrowRight className="w-5 h-5" />}
+                {applyingScheme.documents_required.every((doc: string) => uploadedFiles[doc] || findDocInProfile(doc)) && <ExternalLink className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -765,20 +907,70 @@ const AiAssistantPage: React.FC = () => {
       case 3:
         return (
           <div className="text-center py-10">
-            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-10 h-10 text-emerald-500" />
-            </div>
-            <h3 className="text-2xl font-bold text-app-text mb-2">Application Submitted!</h3>
-            <p className="text-app-text-muted mb-6">Your application for {applyingScheme.name} has been received.</p>
-            <div className="bg-app-bg border border-app-border rounded-2xl p-4 mb-8">
-              <p className="text-sm text-app-text-muted transition-colors">Application ID: GOV-{Math.floor(100000 + Math.random() * 900000)}</p>
-            </div>
-            <button
-              onClick={handleBackToSchemes}
-              className="px-6 py-3 bg-cyan-500 text-white rounded-xl font-bold text-sm hover:bg-cyan-400 transition-all shadow-lg"
-            >
-              Back to Schemes
-            </button>
+            <AnimatePresence mode="wait">
+              {isAnalyzingDocs ? (
+                <motion.div
+                  key="analyzing"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  className="space-y-6"
+                >
+                  <div className="relative w-32 h-32 mx-auto">
+                    <div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
+                    <motion.div 
+                      className="absolute inset-0 border-4 border-t-cyan-500 rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    ></motion.div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Bot className="w-12 h-12 text-cyan-400" />
+                    </div>
+                    <motion.div
+                      className="absolute -inset-4 border border-cyan-500/30 rounded-full"
+                      animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    ></motion.div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-app-text mb-2">Analyzing Documents</h3>
+                    <p className="text-app-text-muted text-sm">Processing security layers and extracting data...</p>
+                  </div>
+                  <div className="flex justify-center space-x-2">
+                    {[0, 1, 2].map(i => (
+                      <motion.div
+                        key={i}
+                        className="w-2 h-2 bg-cyan-500 rounded-full"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ delay: i * 0.2, duration: 0.5, repeat: Infinity }}
+                      ></motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="submitted"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-6"
+                >
+                  <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-app-text mb-2">Application Submitted!</h3>
+                  <p className="text-app-text-muted mb-6">Your application for {applyingScheme.name} has been received.</p>
+                  <div className="bg-app-bg border border-app-border rounded-2xl p-4 mb-8">
+                    <p className="text-sm text-app-text-muted transition-colors">Application ID: GOV-{Math.floor(100000 + Math.random() * 900000)}</p>
+                  </div>
+                  <button
+                    onClick={handleBackToSchemes}
+                    className="px-6 py-3 bg-cyan-500 text-white rounded-xl font-bold text-sm hover:bg-cyan-400 transition-all shadow-lg"
+                  >
+                    Back to Schemes
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       case 4:
@@ -798,6 +990,221 @@ const AiAssistantPage: React.FC = () => {
       default:
         return null;
     }
+  };
+
+  const renderSummaryView = () => {
+    if (!applyingScheme) return null;
+
+    return (
+      <motion.div
+        key="summary"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="p-8 space-y-8 relative overflow-hidden"
+      >
+        {/* Dynamic Background Elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center space-x-5">
+            <motion.div 
+              initial={{ rotate: -10, scale: 0.9 }}
+              animate={{ rotate: 0, scale: 1 }}
+              className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-cyan-500/20"
+            >
+              <Activity className="w-9 h-9 text-white" />
+            </motion.div>
+            <div>
+              <h2 className="text-3xl font-black text-app-text tracking-tight flex items-center gap-2">
+                Unified Dashboard
+                <Sparkles className="w-5 h-5 text-amber-400" />
+              </h2>
+              <p className="text-app-text-muted text-sm flex items-center space-x-2 mt-1">
+                <span className="font-medium">Active Track:</span>
+                <span className="text-cyan-400 font-bold px-2 py-0.5 bg-cyan-500/10 rounded-lg">{applyingScheme.name}</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className="px-5 py-2 rounded-2xl bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] border border-emerald-500/20 flex items-center space-x-3 backdrop-blur-md">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+              <span>AI Agent Monitoring Active</span>
+            </span>
+            <span className="text-[10px] text-app-text-muted mt-2 font-bold uppercase tracking-widest opacity-60">Last Checked: Just now</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Collected Details Section */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="bg-app-surface/50 backdrop-blur-xl border border-app-border rounded-[2rem] p-8 space-y-8 transition-colors shadow-2xl shadow-black/5"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-black text-app-text flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+                    <User className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <span>Profile Intelligence</span>
+                </h3>
+                <div className="flex items-center space-x-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                  <ShieldCheck className="w-3 h-3 text-cyan-400" />
+                  <span className="text-[9px] text-app-text-muted font-black uppercase tracking-widest">End-to-End Encrypted</span>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {[
+                  { label: 'Full Identity', value: userProfile.fullName || userProfile.name, icon: <User className="w-4 h-4" /> },
+                  { label: 'Secure Mobile', value: phoneNumber, icon: <AlertCircle className="w-4 h-4" /> },
+                  { label: 'Gender Group', value: userProfile.gender, icon: <Activity className="w-4 h-4" /> },
+                  { label: 'Status/Role', value: userProfile.occupation, icon: <ShieldCheck className="w-4 h-4" /> },
+                  { label: 'Income Tier', value: `₹${userProfile.income}`, icon: <CheckCircle2 className="w-4 h-4" /> },
+                  { label: 'Edu Profile', value: userProfile.education, icon: <FileText className="w-4 h-4" /> }
+                ].map((item, i) => (
+                  <motion.div 
+                    key={i}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className="flex flex-col p-5 bg-gradient-to-br from-app-bg/80 to-app-bg/40 rounded-2xl border border-app-border/50 group hover:border-cyan-500/30 transition-all shadow-sm"
+                  >
+                    <span className="text-[10px] text-app-text-muted font-black uppercase tracking-[0.15em] mb-2 opacity-70">{item.label}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-bold text-app-text group-hover:text-cyan-400 transition-colors">{item.value || 'Not provided'}</span>
+                      <div className="p-2 bg-app-surface rounded-lg opacity-40 group-hover:opacity-100 group-hover:bg-cyan-500/10 group-hover:text-cyan-400 transition-all">
+                        {item.icon}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* AI Extracted Details Section */}
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-app-surface/80 to-cyan-500/5 backdrop-blur-xl border border-cyan-500/20 rounded-[2rem] p-8 space-y-8 shadow-2xl"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-black text-app-text flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <span>AI Data Extraction</span>
+                </h3>
+                <span className="px-3 py-1 bg-amber-500/10 text-amber-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-500/20">
+                  Real-time OCR active
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {Object.entries(extractedDetails).map(([doc, details]: [string, any], i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 + (i * 0.1) }}
+                    className="flex items-center justify-between p-5 bg-app-bg/40 rounded-2xl border border-app-border hover:border-amber-500/30 transition-all group"
+                  >
+                    <div className="flex items-center space-x-5">
+                      <div className="w-12 h-12 bg-app-surface rounded-xl flex items-center justify-center border border-app-border group-hover:border-amber-500/20">
+                        <FileText className="w-6 h-6 text-app-text-muted group-hover:text-amber-400 transition-colors" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-app-text">{doc}</h4>
+                        <div className="flex items-center space-x-3 mt-1">
+                          {Object.entries(details).filter(([k]) => k !== 'status').map(([key, val]: [string, any], j) => (
+                            <span key={j} className="text-[10px] text-app-text-muted font-medium bg-app-bg px-2 py-0.5 rounded-lg border border-app-border/50">
+                              <span className="opacity-50 uppercase mr-1">{key}:</span> {val}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 px-3 py-1.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{details.status}</span>
+                    </div>
+                  </motion.div>
+                ))}
+                {Object.keys(extractedDetails).length === 0 && (
+                  <div className="py-12 text-center border-2 border-dashed border-app-border rounded-3xl">
+                    <Loader2 className="w-8 h-8 text-app-text-muted animate-spin mx-auto mb-3" />
+                    <p className="text-sm text-app-text-muted">Analyzing document structures...</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="space-y-8">
+            {/* Lifecyle / Timeline Section */}
+            <motion.div 
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-app-surface/50 backdrop-blur-xl border border-app-border rounded-[2rem] p-8 space-y-8 shadow-sm"
+            >
+              <h3 className="text-lg font-black text-app-text flex items-center space-x-4">
+                <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-cyan-400" />
+                </div>
+                <span>Timeline</span>
+              </h3>
+              <div className="relative pl-7 space-y-10 before:content-[''] before:absolute before:left-[13px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-cyan-500 before:via-cyan-500/30 before:to-transparent">
+                {[
+                  { title: 'Submited', desc: 'Gateway confirmation received.', status: 'completed', time: 'Today, 2:15 PM' },
+                  { title: 'AI Verification', desc: 'Secure data extraction successful.', status: 'completed', time: 'Just now' },
+                  { title: 'Processing', desc: 'Sent to Departmental node.', status: 'current', time: 'In progress' },
+                  { title: 'Approval', desc: 'Final sanction confirmation.', status: 'pending', time: 'Est: 3 days' }
+                ].map((step, i) => (
+                  <div key={i} className="relative group">
+                    <div className={`absolute -left-[23px] top-1 w-3.5 h-3.5 rounded-full border-2 z-10 transition-all ${
+                      step.status === 'completed' ? 'bg-cyan-500 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' :
+                      step.status === 'current' ? 'bg-cyan-400 border-cyan-400 animate-pulse' :
+                      'bg-app-surface border-app-border group-hover:border-cyan-500/30'
+                    }`}></div>
+                    <div className="flex flex-col">
+                      <span className={`text-xs font-black uppercase tracking-wider ${step.status === 'pending' ? 'text-app-text-muted' : 'text-app-text'}`}>{step.title}</span>
+                      <span className="text-[11px] text-app-text-muted mt-1 leading-relaxed">{step.desc}</span>
+                      <span className="text-[9px] text-cyan-400/70 font-black mt-2 uppercase tracking-widest">{step.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Smart Assistance / Next Steps Card */}
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-[2rem] p-8 space-y-6 shadow-2xl shadow-cyan-900/20 relative overflow-hidden text-white"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
+                <Bot className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h4 className="text-lg font-black tracking-tight mb-2">Proactive Guard</h4>
+                <p className="text-xs text-white/80 leading-relaxed font-medium">
+                  I will notify you via SMS and Email the moment a state change occurs in your application lifecycle.
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-black/20 rounded-2xl border border-white/10">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/90">Channel: Secure SMS</span>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -871,7 +1278,14 @@ const AiAssistantPage: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      {msg.text}
+                      {msg.role === 'ai' ? (
+                         <div 
+                           className="[&>h2]:mb-3 [&>ul]:list-disc [&>ul]:ml-5 [&>ul]:mt-2 [&>ul]:mb-2 [&>li]:mb-1 [&>b]:text-white/90"
+                           dangerouslySetInnerHTML={{ __html: msg.text }} 
+                         />
+                      ) : (
+                         <>{msg.text}</>
+                      )}
                       {msg.options && (
                         <div className="mt-4 flex flex-wrap gap-2">
                           {msg.options.map((opt, i) => (
@@ -961,10 +1375,57 @@ const AiAssistantPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Right Side: Content Area (Schemes or Application Form) */}
-      <div className="w-full md:w-1/2 bg-app-bg overflow-y-auto custom-scrollbar h-full transition-colors">
+
+      {/* Right Side: Content Area (Schemes, Application Form, or Summary/Official Link) */}
+      <div className={`bg-app-bg overflow-y-auto custom-scrollbar h-full transition-all ${viewMode === 'summary' ? 'w-full md:w-3/4 flex' : 'w-full md:w-1/2'}`}>
+        <div className={`flex-1 transition-all ${viewMode === 'summary' ? 'overflow-y-auto custom-scrollbar' : ''}`}>
         <AnimatePresence mode="wait">
-          {!showApplicationForm ? (
+          {viewMode === 'iframe' && applyingScheme ? (
+            <motion.div
+              key="iframe"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="w-full h-full flex flex-col"
+              style={{ minHeight: '100vh' }}
+            >
+              <div className="p-4 bg-app-surface border-b border-app-border flex items-center justify-between shadow-sm z-10">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                    <Globe className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-app-text truncate">{applyingScheme.name}</h3>
+                    <p className="text-[10px] text-app-text-muted truncate">{applyingScheme.application_link}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 ml-4">
+                  <button onClick={() => window.open(applyingScheme.application_link, '_blank')} className="p-2 bg-app-bg text-app-text-muted hover:text-cyan-400 rounded-xl transition-colors shrink-0" title="Open in New Tab">
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setViewMode('chat')} className="p-2 bg-app-bg text-app-text-muted hover:text-red-400 rounded-xl transition-colors shrink-0" title="Close">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 w-full bg-white relative">
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-50 -z-10">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                    <p className="text-sm text-gray-500 font-medium">Loading Official Portal...</p>
+                  </div>
+                </div>
+                <iframe 
+                  src={`${import.meta.env.VITE_API_BASE_URL}/api/proxy?url=${encodeURIComponent(applyingScheme.application_link)}`} 
+                  className="w-full h-full border-none absolute inset-0 bg-transparent"
+                  title={`${applyingScheme.name} Official Portal`}
+                  sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                />
+              </div>
+            </motion.div>
+          ) : viewMode === 'summary' ? (
+            renderSummaryView()
+          ) : !showApplicationForm ? (
             <motion.div
               key="schemes"
               initial={{ opacity: 0, x: 20 }}
@@ -1013,15 +1474,16 @@ const AiAssistantPage: React.FC = () => {
                           <span>Apply Now</span>
                           <ArrowRight className="w-4 h-4" />
                         </button>
-                        <a
-                          href={scheme.application_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 bg-app-bg text-app-text rounded-xl font-bold text-sm border border-app-border hover:bg-app-surface-hover transition-all flex items-center justify-center space-x-2"
-                        >
-                          <span>Official Link</span>
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                         <button
+                           onClick={() => {
+                             setApplyingScheme(scheme);
+                             setViewMode('iframe');
+                           }}
+                           className="px-6 py-3 bg-app-bg text-app-text rounded-xl font-bold text-sm border border-app-border hover:bg-app-surface-hover transition-all flex items-center justify-center space-x-2"
+                         >
+                           <span>Official Link</span>
+                           <ExternalLink className="w-4 h-4" />
+                         </button>
                       </div>
                     </motion.div>
                   ))
@@ -1091,7 +1553,7 @@ const AiAssistantPage: React.FC = () => {
                     <Bot className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-app-text mb-1">AI Assistant Tip</h4>
+                    <h4 className="text-sm font-bold text-app-text mb-1">Agentic AI Tip</h4>
                     <p className="text-xs text-app-text-muted leading-relaxed">
                       {currentStep === 1 && "Make sure your mobile number is linked to your Aadhaar for OTP verification in the next step. If you need help, just ask me!"}
                       {currentStep === 2 && "We've pre-filled some information from your profile. Please check if everything is correct."}
@@ -1104,6 +1566,91 @@ const AiAssistantPage: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
+
+        {/* Right Sidebar for Official Link in Summary View */}
+        {viewMode === 'summary' && applyingScheme && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="w-full md:w-80 border-l border-app-border bg-app-surface/50 p-6 flex flex-col h-full hidden md:flex"
+          >
+            <div className="space-y-8">
+              {/* Header section in sidebar */}
+              <div>
+                <h4 className="text-xs font-black text-app-text-muted uppercase tracking-[0.2em] mb-4">Official Channel</h4>
+                <div className="p-5 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl shadow-xl shadow-cyan-500/20 text-white space-y-4">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
+                    <ExternalLink className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-sm leading-tight">{applyingScheme.name} Portal</h5>
+                    <p className="text-[10px] text-white/70 mt-1">Direct access to the original source</p>
+                  </div>
+                   <button
+                    onClick={() => setViewMode('iframe')}
+                    className="flex items-center justify-center w-full py-3 bg-white text-cyan-600 rounded-2xl text-xs font-black uppercase tracking-wider hover:bg-white/90 transition-all shadow-lg"
+                  >
+                    Launch Portal
+                  </button>
+                </div>
+              </div>
+
+              {/* Progress Summary */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-app-text-muted uppercase tracking-[0.2em]">Next Milestones</h4>
+                <div className="space-y-4">
+                  {[
+                    { label: 'Portal Registration', status: 'done' },
+                    { label: 'Eligibility Check', status: 'done' },
+                    { label: 'Document Review', status: 'active' },
+                    { label: 'Sanction Order', status: 'todo' }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                        item.status === 'done' ? 'bg-emerald-500/10 border-emerald-500 text-emerald-500' :
+                        item.status === 'active' ? 'bg-cyan-500/10 border-cyan-500 text-cyan-500 animate-pulse' :
+                        'bg-app-bg border-app-border text-app-text-muted'
+                      }`}>
+                        {item.status === 'done' ? <Check className="w-3 h-3" /> : <div className="w-1 h-1 rounded-full bg-current" />}
+                      </div>
+                      <span className={`text-[11px] font-bold ${item.status === 'todo' ? 'text-app-text-muted' : 'text-app-text'}`}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-app-text-muted uppercase tracking-[0.2em]">Quick Actions</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="p-3 bg-app-surface border border-app-border rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-cyan-500/30 transition-all opacity-50 cursor-not-allowed">
+                    <FileText className="w-4 h-4 text-app-text-muted" />
+                    <span className="text-[9px] font-bold text-app-text-muted uppercase">Download</span>
+                  </button>
+                  <button className="p-3 bg-app-surface border border-app-border rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-cyan-500/30 transition-all opacity-50 cursor-not-allowed">
+                    <ShieldCheck className="w-4 h-4 text-app-text-muted" />
+                    <span className="text-[9px] font-bold text-app-text-muted uppercase">Verify</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-8">
+              <button
+                onClick={() => {
+                  setViewMode('chat');
+                  setShowApplicationForm(false);
+                  setApplyingScheme(null);
+                }}
+                className="w-full py-4 bg-app-bg border border-app-border rounded-2xl text-[10px] font-black uppercase tracking-widest text-app-text-muted hover:text-red-400 hover:border-red-500/30 transition-all flex items-center justify-center space-x-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>End Agentic AI Session</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

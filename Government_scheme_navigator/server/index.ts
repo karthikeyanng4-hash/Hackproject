@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.ts';
 import chatRoutes from './routes/chats.ts';
 import schemeRoutes from './routes/schemes.ts';
 import profileRoutes from './routes/profile.ts';
+import proxyRoutes from './routes/proxy.ts';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/proxy', proxyRoutes);
 
 // Initialize DB and Start Server
 const startServer = async () => {

@@ -80,6 +80,10 @@ const PersonalDetails: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, category: 'aadhar' | 'pan' | 'income' | 'other') => {
     const file = e.target.files?.[0];
     const session = localStorage.getItem('userSession');
+    
+    // Reset the input value so the same file can be uploaded again if needed
+    e.target.value = '';
+
     if (file && session) {
       const user = JSON.parse(session);
       const formData = new FormData();
@@ -195,6 +199,7 @@ const PersonalDetails: React.FC = () => {
                   <input
                     type="file"
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     onChange={(e) => handleFileUpload(e, section.id as any)}
                   />
                   <button className={`w-full py-3 bg-${section.color}-500/10 hover:bg-${section.color}-500/20 text-${section.color}-400 border border-${section.color}-500/20 rounded-xl font-semibold transition-all flex items-center justify-center space-x-2`}>
@@ -251,9 +256,6 @@ const PersonalDetails: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-24 border-2 border-dashed border-app-border rounded-2xl transition-colors">
-                  <div className="w-16 h-16 bg-app-bg rounded-full flex items-center justify-center mx-auto mb-4 transition-colors">
-                    <ShieldCheck className="w-8 h-8 text-app-text-muted transition-colors" />
-                  </div>
                   <h4 className="text-app-text font-bold mb-2 transition-colors">No data stored yet</h4>
                   <p className="text-app-text-muted max-w-xs mx-auto transition-colors">Upload your documents using the sections on the left to securely store them.</p>
                 </div>
@@ -262,7 +264,8 @@ const PersonalDetails: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Info Blocks below the grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-2xl p-6">
             <div className="flex items-start space-x-3">
               <ShieldCheck className="w-6 h-6 text-cyan-400 shrink-0" />

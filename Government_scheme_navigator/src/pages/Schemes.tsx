@@ -31,8 +31,9 @@ const Schemes: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [filteredSchemes, setFilteredSchemes] = useState<any[]>([]);
-  const [allSchemes, setAllSchemes] = useState<any[]>([]);
+  const [filteredSchemes, setFilteredSchemes] = useState<any[]>(schemesData);
+  const [allSchemes, setAllSchemes] = useState<any[]>(schemesData);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchSchemes = async () => {
@@ -200,8 +201,8 @@ const Schemes: React.FC = () => {
 
     // Apply Search and Category Filter
     filtered = filtered.filter(scheme => 
-      (scheme.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       scheme.description?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      ((scheme.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+       (scheme.description || '').toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedCategory === 'All' || scheme.category === selectedCategory)
     );
     setFilteredSchemes(filtered);
@@ -209,31 +210,53 @@ const Schemes: React.FC = () => {
 
 
   const toggleVoiceSearch = () => {
-    if (!('webkitSpeechRecognition' in window)) {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
       alert('Voice search is not supported in this browser.');
       return;
     }
 
-    const recognition = new (window as any).webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = lang === 'hi' ? 'hi-IN' : lang === 'ta' ? 'ta-IN' : 'en-IN';
-
     if (isListening) {
-      recognition.stop();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.error('Error stopping speech recognition', e);
+        }
+      }
       setIsListening(false);
     } else {
-      recognition.start();
-      setIsListening(true);
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = lang === 'hi' ? 'hi-IN' : lang === 'ta' ? 'ta-IN' : 'en-IN';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setSearchTerm(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+      
+      recognition.onend = () => {
         setIsListening(false);
       };
 
-      recognition.onerror = () => setIsListening(false);
-      recognition.onend = () => setIsListening(false);
+      try {
+        recognition.start();
+      } catch (err) {
+        console.error('Error starting speech recognition:', err);
+        setIsListening(false);
+      }
     }
   };
 
@@ -253,6 +276,15 @@ const Schemes: React.FC = () => {
               placeholder={t.schemes.search_placeholder + " (Ctrl + K)"}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (searchTerm && filteredSchemes.length > 0) {
+                    setSelectedScheme(filteredSchemes[0]);
+                    searchInputRef.current?.blur();
+                  }
+                }
+              }}
               className="w-full bg-app-surface border border-app-border rounded-2xl py-4 pl-12 pr-12 text-app-text placeholder-app-text-muted/50 focus:outline-none focus:border-cyan-500/50 transition-all shadow-xl"
             />
             <button
@@ -302,11 +334,11 @@ const Schemes: React.FC = () => {
             key={scheme.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            onClick={() => { stopSpeaking(); setSelectedScheme(scheme); }}
+            transition={{ delay: Math.min(i * 0.03, 0.3) }}
+            onClick={() => { setTimeout(() => stopSpeaking(), 0); setSelectedScheme(scheme); }}
             className="bg-app-surface border border-app-border rounded-3xl p-6 hover:border-cyan-500/30 transition-all group cursor-pointer relative overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 -mr-16 -mt-16 rounded-full blur-2xl group-hover:bg-cyan-500/10 transition-all"></div>
+            <div className="absolute top-0 right-0 w-48 h-48 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500/10 via-cyan-500/0 to-transparent -mr-20 -mt-20 rounded-full transition-all group-hover:from-cyan-500/20"></div>
             
             <div className="flex items-center justify-between mb-4">
               <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold uppercase tracking-widest border border-cyan-500/20">
@@ -352,7 +384,7 @@ const Schemes: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={handleCloseModal}
-              className="absolute inset-0 bg-app-bg/80 backdrop-blur-md"
+              className="absolute inset-0 bg-app-bg/95"
             />
             
             <motion.div

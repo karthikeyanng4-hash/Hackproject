@@ -116,7 +116,7 @@ const Home: React.FC = () => {
           >
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-app-surface border border-app-border mb-8">
               <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs font-medium text-app-text-muted">Next-Gen Government Welfare Assistant</span>
+              <span className="text-xs font-medium text-app-text-muted">Next-Gen Government Welfare Agentic AI</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-bold text-app-text mb-8 tracking-tight leading-tight">
